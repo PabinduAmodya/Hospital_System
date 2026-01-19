@@ -22,7 +22,8 @@ public class DoctorController {
                 doctorDTO.getName(),
                 doctorDTO.getSpecialization(),
                 doctorDTO.getPhone(),
-                doctorDTO.getEmail()
+                doctorDTO.getEmail(),
+                doctorDTO.getChanneling_fee()
         );
         return doctorService.saveDoctor(doctor);
     }
