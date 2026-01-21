@@ -6,12 +6,14 @@ import com.hospital_system.hospital.entity.Schedule;
 import com.hospital_system.hospital.service.DoctorService;
 import com.hospital_system.hospital.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/schedules")
+@CrossOrigin(origins = "*")
 public class ScheduleController {
 
     @Autowired
@@ -20,7 +22,7 @@ public class ScheduleController {
     @Autowired
     private DoctorService doctorService;
 
-    // Add schedule
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @PostMapping("/add")
     public Schedule addSchedule(@RequestBody ScheduleDTO scheduleDTO) {
         Doctor doctor = doctorService.findById(scheduleDTO.getDoctorId());
@@ -36,13 +38,13 @@ public class ScheduleController {
         return scheduleService.saveSchedule(schedule);
     }
 
-    // Get schedules by doctor
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @GetMapping("/{doctorId}")
     public List<Schedule> getSchedulesByDoctor(@PathVariable Long doctorId) {
         return scheduleService.getSchedulesByDoctorId(doctorId);
     }
 
-    // Delete schedule
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public String deleteSchedule(@PathVariable Long id) {
         scheduleService.deleteSchedule(id);
