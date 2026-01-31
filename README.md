@@ -1,8 +1,4 @@
-Here’s a **professional GitHub README.md** tailored specifically for your **Spring Boot + JWT + Role-Based Hospital Management Backend**, based on your controllers, entities, security config, and features.
 
-You can copy-paste this directly into your `README.md`.
-
----
 
 # 🏥 Hospital Management System – Backend API
 
