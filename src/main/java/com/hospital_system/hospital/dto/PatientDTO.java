@@ -23,3 +23,4 @@ public class PatientDTO {
     public void setGender(String gender) { this.gender = gender; }
     public void setDob(String dob) { this.dob = dob; }
 }
+
