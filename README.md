@@ -1,6 +1,6 @@
 
 
-# 🏥 Hospital Management System – Backend API
+# 🏥 Hospital Management System 
 
 A **Spring Boot + Spring Security + JWT + JPA** based RESTful backend for a **Hospital Management System**.
 
