@@ -9,29 +9,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/bill")
+@RequestMapping("/api/bills")
 @CrossOrigin(origins = "*")
 public class BillController {
 
     @Autowired
     private BillService billService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
-    @PostMapping("/create")
-    public Bill createBill(@RequestBody Bill bill) {
-        return billService.createBill(bill);
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
+    @PostMapping("/appointment/{appointmentId}")
+    public Bill createAppointmentBill(@PathVariable Long appointmentId) {
+        return billService.createAppointmentBill(appointmentId);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
-    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
+    @PostMapping("/{billId}/add-test/{testId}")
+    public Bill addMedicalTest(@PathVariable Long billId, @PathVariable Long testId) {
+        return billService.addMedicalTestToBill(billId, testId);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
+    @GetMapping
     public List<Bill> getAllBills() {
         return billService.getAllBills();
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/delete/{id}")
-    public String deleteBill(@PathVariable Long id) {
-        billService.deleteBill(id);
-        return "Bill deleted!";
     }
 }
