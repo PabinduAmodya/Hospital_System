@@ -1,6 +1,8 @@
 package com.hospital_system.hospital.entity;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
@@ -15,14 +17,14 @@ public class Doctor {
     private String specialization;
     private String phone;
     private String email;
-    private String channelling_fee;
+    private BigDecimal channelling_fee;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Schedule> schedules;
 
     public Doctor() {}
 
-    public Doctor(String name, String specialization, String phone, String email,String channelling_fee) {
+    public Doctor(String name, String specialization, String phone, String email,BigDecimal channelling_fee) {
         this.name = name;
         this.specialization = specialization;
         this.phone = phone;
@@ -46,8 +48,8 @@ public class Doctor {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getChannelling_fee(){return  channelling_fee;}
-    public void setChannelling_fee(String channelling_fee){this.channelling_fee=channelling_fee;}
+    public BigDecimal getChannelling_fee(){return  channelling_fee;}
+    public void setChannelling_fee(BigDecimal channelling_fee){this.channelling_fee=channelling_fee;}
 
     public List<Schedule> getSchedules() { return schedules; }
     public void setSchedules(List<Schedule> schedules) { this.schedules = schedules; }

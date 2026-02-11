@@ -1,6 +1,7 @@
 package com.hospital_system.hospital.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,30 +16,28 @@ public class Payment {
     @JoinColumn(name = "bill_id")
     private Bill bill;
 
-    @Column(nullable = false)
-    private Double amountPaid;
+    private BigDecimal amountPaid;
 
-    @Column(nullable = false)
+    private String paymentMethod; // CASH / CARD / ONLINE
+
     private LocalDateTime paidAt = LocalDateTime.now();
 
-    // Constructors
     public Payment() {}
 
-    public Payment(Bill bill, Double amountPaid) {
+    public Payment(Bill bill, BigDecimal amountPaid, String paymentMethod) {
         this.bill = bill;
         this.amountPaid = amountPaid;
+        this.paymentMethod = paymentMethod;
     }
 
     // Getters & Setters
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public Bill getBill() { return bill; }
+    public BigDecimal getAmountPaid() { return amountPaid; }
+    public String getPaymentMethod() { return paymentMethod; }
+
+    public void setId(Long id) { this.id = id; }
     public void setBill(Bill bill) { this.bill = bill; }
-
-    public Double getAmountPaid() { return amountPaid; }
-    public void setAmountPaid(Double amountPaid) { this.amountPaid = amountPaid; }
-
-    public LocalDateTime getPaidAt() { return paidAt; }
-    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+    public void setAmountPaid(BigDecimal amountPaid) { this.amountPaid = amountPaid; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

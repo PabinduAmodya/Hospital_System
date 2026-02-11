@@ -1,16 +1,18 @@
 package com.hospital_system.hospital.dto;
 
+import java.math.BigDecimal;
+
 public class DoctorDTO {
 
     private String name;
     private String specialization;
     private String phone;
     private String email;
-    private String channeling_fee;
+    private BigDecimal channeling_fee;
 
     public DoctorDTO() {}
 
-    public DoctorDTO(String name, String specialization, String phone, String email,String channeling_fee) {
+    public DoctorDTO(String name, String specialization, String phone, String email, BigDecimal channeling_fee) {
         this.name = name;
         this.specialization = specialization;
         this.phone = phone;
@@ -31,11 +33,11 @@ public class DoctorDTO {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getChanneling_fee() {
+    public BigDecimal getChanneling_fee() {
         return channeling_fee;
     }
 
-    public void setChanneling_fee(String channeling_fee) {
+    public void setChanneling_fee(BigDecimal channeling_fee) {
         this.channeling_fee = channeling_fee;
     }
 }
