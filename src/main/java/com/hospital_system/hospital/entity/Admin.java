@@ -18,7 +18,7 @@ public class Admin {
         // default constructor
     }
 
-    // ✅ Add this constructor
+    // Add this constructor
     public Admin(String username, String password, String role) {
         this.username = username;
         this.password = password;
