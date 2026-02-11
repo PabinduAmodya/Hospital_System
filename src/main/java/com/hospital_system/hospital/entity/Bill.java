@@ -1,7 +1,9 @@
 package com.hospital_system.hospital.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "bills")
@@ -11,41 +13,40 @@ public class Bill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String patientName;
 
-    @Column(nullable = false)
-    private Double totalAmount;
+    @ManyToOne
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
 
-    @Column(nullable = false)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+
+    private boolean paid = false;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @ManyToOne
-    @JoinColumn(name = "cashier_id")
-    private Cashier cashier;
+    @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL)
+    private List<BillItem> items;
 
-    // Constructors
     public Bill() {}
 
-    public Bill(String patientName, Double totalAmount, Cashier cashier) {
+    public Bill(String patientName, Appointment appointment) {
         this.patientName = patientName;
-        this.totalAmount = totalAmount;
-        this.cashier = cashier;
+        this.appointment = appointment;
     }
 
     // Getters & Setters
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getPatientName() { return patientName; }
+    public Appointment getAppointment() { return appointment; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public boolean isPaid() { return paid; }
+    public List<BillItem> getItems() { return items; }
+
+    public void setId(Long id) { this.id = id; }
     public void setPatientName(String patientName) { this.patientName = patientName; }
-
-    public Double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public Cashier getCashier() { return cashier; }
-    public void setCashier(Cashier cashier) { this.cashier = cashier; }
+    public void setAppointment(Appointment appointment) { this.appointment = appointment; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public void setPaid(boolean paid) { this.paid = paid; }
+    public void setItems(List<BillItem> items) { this.items = items; }
 }
