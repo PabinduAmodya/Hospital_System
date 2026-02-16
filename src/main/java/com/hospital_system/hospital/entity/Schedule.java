@@ -1,5 +1,6 @@
 package com.hospital_system.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -16,6 +17,7 @@ public class Schedule {
 
     @ManyToOne
     @JoinColumn(name = "doctor_id")
+    @JsonBackReference  // KEEP THIS
     private Doctor doctor;
 
     public Schedule() {}

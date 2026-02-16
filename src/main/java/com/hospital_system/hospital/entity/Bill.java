@@ -1,5 +1,6 @@
 package com.hospital_system.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ public class Bill {
 
     private String patientName;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "appointment_id")
     private Appointment appointment;
 
@@ -25,7 +26,8 @@ public class Bill {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonManagedReference
     private List<BillItem> items;
 
     public Bill() {}
@@ -42,6 +44,7 @@ public class Bill {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public boolean isPaid() { return paid; }
     public List<BillItem> getItems() { return items; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
     public void setId(Long id) { this.id = id; }
     public void setPatientName(String patientName) { this.patientName = patientName; }
@@ -49,4 +52,5 @@ public class Bill {
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
     public void setPaid(boolean paid) { this.paid = paid; }
     public void setItems(List<BillItem> items) { this.items = items; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

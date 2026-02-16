@@ -1,7 +1,7 @@
 package com.hospital_system.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -20,16 +20,17 @@ public class Doctor {
     private BigDecimal channelling_fee;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference  // KEEP THIS
     private List<Schedule> schedules;
 
     public Doctor() {}
 
-    public Doctor(String name, String specialization, String phone, String email,BigDecimal channelling_fee) {
+    public Doctor(String name, String specialization, String phone, String email, BigDecimal channelling_fee) {
         this.name = name;
         this.specialization = specialization;
         this.phone = phone;
         this.email = email;
-        this.channelling_fee=channelling_fee;
+        this.channelling_fee = channelling_fee;
     }
 
     // Getters & Setters
@@ -48,10 +49,9 @@ public class Doctor {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public BigDecimal getChannelling_fee(){return  channelling_fee;}
-    public void setChannelling_fee(BigDecimal channelling_fee){this.channelling_fee=channelling_fee;}
+    public BigDecimal getChannelling_fee() { return channelling_fee; }
+    public void setChannelling_fee(BigDecimal channelling_fee) { this.channelling_fee = channelling_fee; }
 
     public List<Schedule> getSchedules() { return schedules; }
     public void setSchedules(List<Schedule> schedules) { this.schedules = schedules; }
 }
-

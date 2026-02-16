@@ -1,5 +1,6 @@
 package com.hospital_system.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
@@ -11,12 +12,13 @@ public class BillItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String itemName; // Appointment / Blood Test / X-Ray
-    private String itemType; // APPOINTMENT / LAB_TEST / RADIOLOGY
+    private String itemName;
+    private String itemType;
     private BigDecimal price;
 
     @ManyToOne
     @JoinColumn(name = "bill_id")
+    @JsonBackReference
     private Bill bill;
 
     public BillItem() {}

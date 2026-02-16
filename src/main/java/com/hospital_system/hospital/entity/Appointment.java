@@ -1,5 +1,6 @@
 package com.hospital_system.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hospital_system.hospital.enums.AppointmentStatus;
 import com.hospital_system.hospital.enums.PaymentStatus;
 import jakarta.persistence.*;
@@ -50,21 +51,19 @@ public class Appointment {
     private String cancellationReason;
 
     private LocalDateTime createdAt = LocalDateTime.now();
-
     private LocalDateTime updatedAt = LocalDateTime.now();
-
     private LocalDateTime cancelledAt;
-
     private LocalDateTime paidAt;
-
     private LocalDateTime refundedAt;
 
-    // Reference to rescheduled appointment
+    // Reference to rescheduled appointment - IGNORE BOTH TO PREVENT LOOP
     @OneToOne
     @JoinColumn(name = "rescheduled_from_id")
+    @JsonIgnore  // IGNORE THIS COMPLETELY
     private Appointment rescheduledFrom;
 
     @OneToOne(mappedBy = "rescheduledFrom")
+    @JsonIgnore  // IGNORE THIS COMPLETELY
     private Appointment rescheduledTo;
 
     // Constructors

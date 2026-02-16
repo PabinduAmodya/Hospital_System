@@ -1,5 +1,6 @@
 package com.hospital_system.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class Payment {
 
     @ManyToOne
     @JoinColumn(name = "bill_id")
+    @JsonIgnoreProperties("items")
     private Bill bill;
 
     private BigDecimal amountPaid;
