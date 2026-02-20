@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/app.js", "/styles.css", "/favicon.ico", "/error").permitAll()
 
                         // Admin only endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -42,11 +43,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/patients/**").hasAnyRole("ADMIN", "RECEPTIONIST")
                         .requestMatchers("/api/doctors/**").hasAnyRole("ADMIN", "RECEPTIONIST")
                         .requestMatchers("/api/schedules/**").hasAnyRole("ADMIN", "RECEPTIONIST")
-                        .requestMatchers("/api/appointments/**").hasAnyRole("ADMIN", "RECEPTIONIST")
+                        .requestMatchers("/api/appointments/**").hasAnyRole("ADMIN", "RECEPTIONIST", "CASHIER")
                         .requestMatchers("/api/tests/**").hasAnyRole("ADMIN", "RECEPTIONIST")
 
                         // Admin and Cashier endpoints
-                        .requestMatchers("/api/bill/**").hasAnyRole("ADMIN", "CASHIER")
+                        .requestMatchers("/api/bills/**").hasAnyRole("ADMIN", "CASHIER")
                         .requestMatchers("/api/payment/**").hasAnyRole("ADMIN", "CASHIER")
 
                         // All other requests need authentication

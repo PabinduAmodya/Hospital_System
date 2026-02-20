@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital System Frontend</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>🏥 Hospital Management Portal</h1>
+    <div id="session-info" class="hidden"></div>
+  </header>
+
+  <main class="container">
+    <section id="auth-card" class="card">
+      <h2>Login</h2>
+      <form id="login-form" class="grid-form">
+        <label>Username <input required name="username" /></label>
+        <label>Password <input required type="password" name="password" /></label>
+        <button type="submit">Login</button>
+      </form>
+      <p class="hint">Use an existing backend user account to sign in.</p>
+      <p class="error" id="login-error"></p>
+    </section>
+
+    <section id="app" class="hidden">
+      <div class="actions-row">
+        <button id="logout-btn" class="danger">Logout</button>
+      </div>
+
+      <nav id="module-nav" class="module-nav"></nav>
+      <section id="module-content"></section>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -177,6 +177,15 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
+
+## 🖥️ Built-in Frontend
+
+A complete browser frontend is now included in `src/main/resources/static` and served directly by Spring Boot.
+
+- Open `http://localhost:8080` in your browser
+- Login with an existing user
+- The UI enables role-based modules for Admin, Receptionist, and Cashier workflows (users, doctors, schedules, patients, appointments, tests, bills, and payments)
+
 # 📌 API Endpoints
 
 ---
