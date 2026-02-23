@@ -164,12 +164,6 @@ http://localhost:8080/api
 
 ---
 
-## 👨‍💻 Author
-
-Pabindu Amodya
-Computer Science Undergraduate
-
----
 
 ## ⭐ How to Run Full System
 
