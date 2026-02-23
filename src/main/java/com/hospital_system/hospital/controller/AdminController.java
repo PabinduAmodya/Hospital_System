@@ -2,9 +2,11 @@ package com.hospital_system.hospital.controller;
 
 import com.hospital_system.hospital.entity.Role;
 import com.hospital_system.hospital.entity.User;
+import com.hospital_system.hospital.exception.BadRequestException;
+import com.hospital_system.hospital.exception.ResourceNotFoundException;
 import com.hospital_system.hospital.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -29,28 +31,52 @@ public class AdminController {
         return userRepository.findAll();
     }
 
-    // Add new user (cashier, receptionist, etc.)
+    // Create user (cashier, receptionist, etc.)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    public User createUser(@Valid @RequestBody User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
-            return ResponseEntity.badRequest().body("Username already exists");
+            throw new BadRequestException("Username already exists");
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+
+    // Update user (name/username/role, optional password)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/users/{id}")
+    public User updateUser(@PathVariable Long id, @RequestBody User user) {
+        User existing = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+
+        // username uniqueness check
+        if (user.getUsername() != null && !user.getUsername().equals(existing.getUsername())) {
+            if (userRepository.existsByUsername(user.getUsername())) {
+                throw new BadRequestException("Username already exists");
+            }
+            existing.setUsername(user.getUsername());
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
-        return ResponseEntity.ok(savedUser);
+        if (user.getName() != null) existing.setName(user.getName());
+        if (user.getRole() != null) existing.setRole(user.getRole());
+
+        // if password provided, encode and update
+        if (user.getPassword() != null && !user.getPassword().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        return userRepository.save(existing);
     }
 
     // Delete user
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public String deleteUser(@PathVariable Long id) {
         if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("User not found: " + id);
         }
         userRepository.deleteById(id);
-        return ResponseEntity.ok("User deleted successfully");
+        return "User deleted successfully";
     }
 
     // Get users by role

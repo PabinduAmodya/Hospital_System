@@ -22,7 +22,7 @@ public class AppointmentController {
     @Autowired
     private AppointmentService appointmentService;
 
-    //Book new appointment
+    // Book new appointment - UPDATED: Fee is auto-calculated
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @PostMapping("/book")
     public ResponseEntity<?> bookAppointment(@RequestBody AppointmentDTO appointmentDTO) {
@@ -31,7 +31,7 @@ public class AppointmentController {
                     appointmentDTO.getPatientId(),
                     appointmentDTO.getScheduleId(),
                     appointmentDTO.getAppointmentDate(),
-                    appointmentDTO.getAppointmentFee()
+                    null  // Fee is now auto-calculated, no need to pass it
             );
             return ResponseEntity.ok(appointment);
         } catch (Exception e) {
@@ -39,14 +39,14 @@ public class AppointmentController {
         }
     }
 
-    //Get all appointments
+    // Get all appointments
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @GetMapping
     public List<Appointment> getAllAppointments() {
         return appointmentService.getAllAppointments();
     }
 
-    //Get appointment by ID
+    // Get appointment by ID
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getAppointmentById(@PathVariable Long id) {
@@ -58,7 +58,7 @@ public class AppointmentController {
         }
     }
 
-    //Update appointment status
+    // Update appointment status
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
@@ -75,7 +75,7 @@ public class AppointmentController {
         }
     }
 
-    //Cancel appointment
+    // Cancel appointment
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelAppointment(@PathVariable Long id,
@@ -92,7 +92,7 @@ public class AppointmentController {
         }
     }
 
-    //Mark appointment as paid
+    // Mark appointment as paid
     @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER', 'RECEPTIONIST')")
     @PostMapping("/{id}/payment")
     public ResponseEntity<?> markAsPaid(@PathVariable Long id,
@@ -105,7 +105,7 @@ public class AppointmentController {
         }
     }
 
-    //Reschedule to next available date
+    // Reschedule to next available date
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @PutMapping("/{id}/reschedule")
     public ResponseEntity<?> rescheduleAppointment(@PathVariable Long id) {
@@ -117,14 +117,14 @@ public class AppointmentController {
         }
     }
 
-    //Get appointments by status
+    // Get appointments by status
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @GetMapping("/status/{status}")
     public List<Appointment> getByStatus(@PathVariable AppointmentStatus status) {
         return appointmentService.getAppointmentsByStatus(status);
     }
 
-    //Get today's appointments
+    // Get today's appointments
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @GetMapping("/today")
     public List<Appointment> getTodayAppointments() {
