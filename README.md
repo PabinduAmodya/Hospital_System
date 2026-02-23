@@ -2,7 +2,7 @@
 
 A full-stack Hospital Management System built with **Spring Boot (Backend)** and **React + Vite (Frontend)** to manage hospital operations such as patients, doctors, appointments, billing, schedules, and authentication.
 
----
+--
 
 ## 🚀 Features
 
