@@ -7,5 +7,7 @@ public enum AppointmentStatus {
     PAID,         // Payment received
     CANCELLED,    // Cancelled appointment
     REFUNDED,     // Payment refunded
-    RESCHEDULED   // Moved to different date
+    RESCHEDULED ,  // Moved to different date
+    SCHEDULES,
+    BOOKED
 }

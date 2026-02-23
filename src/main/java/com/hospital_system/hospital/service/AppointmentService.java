@@ -30,52 +30,72 @@ public class AppointmentService {
     @Autowired
     private ScheduleRepository scheduleRepository;
 
-    // Book new appointment
+    private static final BigDecimal HOSPITAL_CHARGE = new BigDecimal("750.00");
+
+    // ================= BOOK APPOINTMENT =================
     @Transactional
     public Appointment bookAppointment(Long patientId, Long scheduleId, LocalDate appointmentDate, BigDecimal fee) throws Exception {
+
         Optional<Patient> patientOpt = patientRepository.findById(patientId);
         Optional<Schedule> scheduleOpt = scheduleRepository.findById(scheduleId);
 
         if (patientOpt.isEmpty()) throw new Exception("Patient not found");
         if (scheduleOpt.isEmpty()) throw new Exception("Schedule not found");
 
-        // Check if slot is available
-        List<Appointment> existingAppointments = appointmentRepository
-                .findByDoctorIdAndDate(scheduleOpt.get().getDoctor().getId(), appointmentDate);
+        Schedule schedule = scheduleOpt.get();
 
-        // Simple check - you can add more complex slot validation
-        if (existingAppointments.size() >= 20) { // Max 20 patients per day
+        // Validate doctor availability using String day
+        if (!schedule.getDay().equalsIgnoreCase(appointmentDate.getDayOfWeek().name())) {
+            throw new Exception("Doctor not available on this day");
+        }
+
+        // Check daily limit
+        List<Appointment> existingAppointments = appointmentRepository
+                .findByDoctorIdAndDate(schedule.getDoctor().getId(), appointmentDate);
+
+        if (existingAppointments.size() >= 20) {
             throw new Exception("No slots available for this date");
         }
 
+        // Calculate total fee
+        BigDecimal doctorFee = schedule.getDoctor().getChannelling_fee();
+        BigDecimal totalFee = doctorFee.add(HOSPITAL_CHARGE);
+
         Appointment appointment = new Appointment(
                 patientOpt.get(),
-                scheduleOpt.get(),
+                schedule,
                 appointmentDate,
-                fee
+                totalFee
         );
+
+        appointment.setStatus(AppointmentStatus.PENDING);
+        appointment.setCreatedAt(LocalDateTime.now());
 
         return appointmentRepository.save(appointment);
     }
 
-    // Update appointment status
+    // ================= UPDATE STATUS =================
     @Transactional
     public Appointment updateStatus(Long appointmentId, AppointmentStatus status, String notes) {
+
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         appointment.setStatus(status);
+
         if (notes != null && !notes.isEmpty()) {
             appointment.setNotes(notes);
         }
+
         appointment.setUpdatedAt(LocalDateTime.now());
 
         return appointmentRepository.save(appointment);
     }
 
-    // Cancel appointment
+    // ================= CANCEL =================
     @Transactional
     public Appointment cancelAppointment(Long appointmentId, String reason, boolean refundRequired) {
+
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
@@ -87,8 +107,10 @@ public class AppointmentService {
         appointment.setCancellationReason(reason);
         appointment.setCancelledAt(LocalDateTime.now());
 
-        // Handle refund
-        if (refundRequired && appointment.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+        if (refundRequired &&
+                appointment.getPaidAmount() != null &&
+                appointment.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+
             appointment.setRefundAmount(appointment.getPaidAmount());
             appointment.setPaymentStatus(PaymentStatus.REFUNDED);
             appointment.setRefundedAt(LocalDateTime.now());
@@ -97,9 +119,10 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    // Mark as paid
+    // ================= MARK PAID =================
     @Transactional
     public Appointment markAsPaid(Long appointmentId, BigDecimal amount) {
+
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
@@ -111,9 +134,10 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    // Reschedule to next available date
+    // ================= RESCHEDULE =================
     @Transactional
     public Appointment rescheduleToNextAvailable(Long appointmentId) throws Exception {
+
         Appointment oldAppointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
@@ -121,44 +145,41 @@ public class AppointmentService {
             throw new Exception("Cannot reschedule cancelled appointment");
         }
 
-        // Find next available date for same doctor
         LocalDate nextDate = findNextAvailableDate(
                 oldAppointment.getSchedule().getDoctor().getId(),
                 oldAppointment.getAppointmentDate()
         );
 
         if (nextDate == null) {
-            throw new Exception("No available slots found in next 30 days");
+            throw new Exception("No available slots found");
         }
 
-        // Create new appointment
         Appointment newAppointment = new Appointment(
                 oldAppointment.getPatient(),
                 oldAppointment.getSchedule(),
                 nextDate,
                 oldAppointment.getAppointmentFee()
         );
-        newAppointment.setRescheduledFrom(oldAppointment);
+
         newAppointment.setNotes("Rescheduled from " + oldAppointment.getAppointmentDate());
 
-        // Update old appointment
         oldAppointment.setStatus(AppointmentStatus.RESCHEDULED);
-        oldAppointment.setRescheduledTo(newAppointment);
 
         appointmentRepository.save(oldAppointment);
         return appointmentRepository.save(newAppointment);
     }
 
-    // Find next available date for doctor
+    // ================= FIND NEXT DATE =================
     private LocalDate findNextAvailableDate(Long doctorId, LocalDate currentDate) {
+
         LocalDate searchDate = currentDate.plusDays(1);
-        LocalDate maxDate = currentDate.plusDays(30); // Search within 30 days
+        LocalDate maxDate = currentDate.plusDays(30);
 
         while (searchDate.isBefore(maxDate)) {
+
             List<Appointment> bookedSlots = appointmentRepository
                     .findBookedSlotsByDoctorAndDate(doctorId, searchDate);
 
-            // If less than 20 appointments, date is available
             if (bookedSlots.size() < 20) {
                 return searchDate;
             }
@@ -166,38 +187,32 @@ public class AppointmentService {
             searchDate = searchDate.plusDays(1);
         }
 
-        return null; // No available slots found
+        return null;
     }
 
-    // Get all appointments
+    // ================= QUERIES =================
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
 
-    // Get appointments by status
     public List<Appointment> getAppointmentsByStatus(AppointmentStatus status) {
         return appointmentRepository.findByStatus(status);
     }
 
-    // Get appointments by patient
     public List<Appointment> getAppointmentsByPatient(Long patientId) {
         return appointmentRepository.findByPatientId(patientId);
     }
 
-    // Get today's appointments
     public List<Appointment> getTodayAppointments() {
         return appointmentRepository.findTodayAppointments();
     }
 
-    // Get appointments by doctor
     public List<Appointment> getAppointmentsByDoctor(Long doctorId) {
         return appointmentRepository.findByDoctorId(doctorId);
     }
 
-    // Get appointment by ID
     public Appointment getAppointmentById(Long id) {
         return appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
     }
 }
-
