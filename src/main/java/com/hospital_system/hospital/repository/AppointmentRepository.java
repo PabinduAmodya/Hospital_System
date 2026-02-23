@@ -42,6 +42,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // Count appointments by status
     long countByStatus(AppointmentStatus status);
 
+
+    // Conflict check: schedule already booked on date (excluding cancelled/rescheduled)
+    @Query("SELECT (COUNT(a) > 0) FROM Appointment a WHERE a.schedule.id = :scheduleId AND a.appointmentDate = :date AND a.status NOT IN ('CANCELLED','RESCHEDULED')")
+    boolean existsActiveByScheduleAndDate(@Param("scheduleId") Long scheduleId, @Param("date") LocalDate date);
+
+    // Count today's appointments
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate = CURRENT_DATE")
+    long countToday();
+
     // Today's appointments
     @Query("SELECT a FROM Appointment a WHERE a.appointmentDate = CURRENT_DATE")
     List<Appointment> findTodayAppointments();
