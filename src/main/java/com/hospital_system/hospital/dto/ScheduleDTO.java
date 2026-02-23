@@ -1,10 +1,20 @@
 package com.hospital_system.hospital.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class ScheduleDTO {
 
+    @NotNull(message = "Doctor ID is required")
     private Long doctorId;
+
+    @NotBlank(message = "Day is required")
     private String day;
+
+    @NotBlank(message = "Start time is required")
     private String startTime;
+
+    @NotBlank(message = "End time is required")
     private String endTime;
 
     public ScheduleDTO() {}
@@ -16,7 +26,6 @@ public class ScheduleDTO {
         this.endTime = endTime;
     }
 
-    // Getters & Setters
     public Long getDoctorId() { return doctorId; }
     public void setDoctorId(Long doctorId) { this.doctorId = doctorId; }
 
