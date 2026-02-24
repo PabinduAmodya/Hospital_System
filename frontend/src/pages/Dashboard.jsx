@@ -44,7 +44,7 @@ function Dashboard() {
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold">Hospital Dashboard 🏥</h2>
-          <p className="text-gray-600 mt-1">Live overview from your backend APIs.</p>
+          
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
