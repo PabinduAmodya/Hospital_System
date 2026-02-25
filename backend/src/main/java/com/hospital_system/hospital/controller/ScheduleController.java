@@ -1,6 +1,7 @@
 package com.hospital_system.hospital.controller;
 
 import com.hospital_system.hospital.dto.ScheduleDTO;
+import com.hospital_system.hospital.dto.ScheduleResponse;
 import com.hospital_system.hospital.entity.Doctor;
 import com.hospital_system.hospital.entity.Schedule;
 import com.hospital_system.hospital.service.DoctorService;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/schedules")
@@ -26,7 +28,7 @@ public class ScheduleController {
     // CREATE
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @PostMapping("/add")
-    public Schedule addSchedule(@Valid @RequestBody ScheduleDTO scheduleDTO) {
+    public ScheduleResponse addSchedule(@Valid @RequestBody ScheduleDTO scheduleDTO) {
         Doctor doctor = doctorService.getById(scheduleDTO.getDoctorId());
         Schedule schedule = new Schedule(
                 scheduleDTO.getDay(),
@@ -34,34 +36,40 @@ public class ScheduleController {
                 scheduleDTO.getEndTime(),
                 doctor
         );
-        return scheduleService.create(schedule);
+        return ScheduleResponse.from(scheduleService.create(schedule));
     }
 
-    // READ all schedules (new)
+    // READ all — returns ScheduleResponse so doctor name is always included
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @GetMapping
-    public List<Schedule> getAllSchedules() {
-        return scheduleService.getAll();
+    public List<ScheduleResponse> getAllSchedules() {
+        return scheduleService.getAll()
+                .stream()
+                .map(ScheduleResponse::from)
+                .collect(Collectors.toList());
     }
 
-    // READ schedules by doctor (kept for backward compatibility)
+    // READ schedules by doctor
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
-    @GetMapping("/{doctorId}")
-    public List<Schedule> getSchedulesByDoctor(@PathVariable Long doctorId) {
-        return scheduleService.getByDoctorId(doctorId);
+    @GetMapping("/doctor/{doctorId}")
+    public List<ScheduleResponse> getSchedulesByDoctor(@PathVariable Long doctorId) {
+        return scheduleService.getByDoctorId(doctorId)
+                .stream()
+                .map(ScheduleResponse::from)
+                .collect(Collectors.toList());
     }
 
-    // READ schedule by id (new, avoids clash with /{doctorId})
+    // READ single schedule
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     @GetMapping("/detail/{id}")
-    public Schedule getScheduleById(@PathVariable Long id) {
-        return scheduleService.getById(id);
+    public ScheduleResponse getScheduleById(@PathVariable Long id) {
+        return ScheduleResponse.from(scheduleService.getById(id));
     }
 
-    // UPDATE (new)
+    // UPDATE
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public Schedule updateSchedule(@PathVariable Long id, @Valid @RequestBody ScheduleDTO scheduleDTO) {
+    public ScheduleResponse updateSchedule(@PathVariable Long id, @Valid @RequestBody ScheduleDTO scheduleDTO) {
         Doctor doctor = doctorService.getById(scheduleDTO.getDoctorId());
         Schedule updated = new Schedule(
                 scheduleDTO.getDay(),
@@ -69,7 +77,7 @@ public class ScheduleController {
                 scheduleDTO.getEndTime(),
                 doctor
         );
-        return scheduleService.update(id, updated);
+        return ScheduleResponse.from(scheduleService.update(id, updated));
     }
 
     // DELETE
