@@ -3,6 +3,8 @@ package com.hospital_system.hospital.service;
 import com.hospital_system.hospital.entity.*;
 import com.hospital_system.hospital.enums.PaymentStatus;
 import com.hospital_system.hospital.repository.*;
+import java.util.List;
+import java.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.hospital_system.hospital.service.SystemSettingService;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,9 @@ public class BillService {
     private PaymentRepository paymentRepository;
 
     @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
     private SystemSettingService settingService;
 
     // Create bill for appointment — splits fees into line items automatically
@@ -55,6 +60,8 @@ public class BillService {
         }
 
         Bill bill = new Bill(appointment.getPatient().getName(), appointment);
+        bill.setPatientId(appointment.getPatient().getId());
+        bill.setBillType("APPOINTMENT");
         bill = billRepository.save(bill);
 
         BigDecimal totalFee = appointment.getAppointmentFee();
@@ -181,6 +188,47 @@ public class BillService {
         }
 
         return bill;
+    }
+
+    // Create a standalone test-only bill for a patient (no appointment needed)
+    @Transactional
+    public Bill createTestOnlyBill(Long patientId, List<Long> testIds) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Patient not found: " + patientId));
+
+        if (testIds == null || testIds.isEmpty()) {
+            throw new RuntimeException("At least one medical test is required");
+        }
+
+        Bill bill = new Bill();
+        bill.setPatientName(patient.getName());
+        bill.setPatientId(patientId);
+        bill.setBillType("TEST_ONLY");
+        bill.setTotalAmount(BigDecimal.ZERO);
+        bill = billRepository.save(bill);
+
+        BigDecimal total = BigDecimal.ZERO;
+        List<String> addedNames = new ArrayList<>();
+
+        for (Long testId : testIds) {
+            MedicalTest test = medicalTestRepository.findById(testId)
+                    .orElseThrow(() -> new RuntimeException("Medical test not found: " + testId));
+            if (!test.isActive()) continue;
+            if (addedNames.contains(test.getName())) continue; // no duplicates
+            addedNames.add(test.getName());
+
+            BillItem item = new BillItem(test.getName(), test.getType().name(), test.getPrice(), bill);
+            billItemRepository.save(item);
+            total = total.add(test.getPrice());
+        }
+
+        if (total.compareTo(BigDecimal.ZERO) == 0) {
+            billRepository.delete(bill);
+            throw new RuntimeException("No valid tests were added to the bill");
+        }
+
+        bill.setTotalAmount(total);
+        return billRepository.save(bill);
     }
 
     // Queries

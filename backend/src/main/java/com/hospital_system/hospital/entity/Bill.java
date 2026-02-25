@@ -15,6 +15,8 @@ public class Bill {
     private Long id;
 
     private String patientName;
+    private Long patientId;          // set for both appointment bills and standalone test bills
+    private String billType = "APPOINTMENT"; // APPOINTMENT | TEST_ONLY
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "appointment_id")
@@ -60,5 +62,9 @@ public class Bill {
     public void setItems(List<BillItem> items) { this.items = items; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+    public Long getPatientId() { return patientId; }
+    public String getBillType() { return billType; }
+    public void setPatientId(Long patientId) { this.patientId = patientId; }
+    public void setBillType(String billType) { this.billType = billType; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

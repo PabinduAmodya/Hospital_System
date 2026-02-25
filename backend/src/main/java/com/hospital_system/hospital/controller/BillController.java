@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bills")
@@ -46,6 +47,19 @@ public class BillController {
     public ResponseEntity<?> removeMedicalTest(@PathVariable Long billId, @PathVariable Long itemId) {
         try {
             return ResponseEntity.ok(billService.removeMedicalTestFromBill(billId, itemId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Create standalone test-only bill for a patient
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','RECEPTIONIST')")
+    @PostMapping("/patient/{patientId}/tests")
+    public ResponseEntity<?> createTestBill(@PathVariable Long patientId,
+                                            @RequestBody Map<String, List<Long>> body) {
+        try {
+            List<Long> testIds = body.get("testIds");
+            return ResponseEntity.ok(billService.createTestOnlyBill(patientId, testIds));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -107,6 +121,3 @@ public class BillController {
         }
     }
 }
-
-
-

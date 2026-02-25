@@ -22,8 +22,8 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
     // Find bills by appointment
     List<Bill> findByAppointment(Appointment appointment);
 
-    // Find bills by patient (via appointment -> patient)
-    @Query("SELECT b FROM Bill b WHERE b.appointment.patient.id = :patientId")
+    // Find bills by patient — both appointment bills AND standalone test bills
+    @Query("SELECT b FROM Bill b WHERE b.patientId = :patientId")
     List<Bill> findByPatientId(@Param("patientId") Long patientId);
 
     // Total revenue from paid bills
