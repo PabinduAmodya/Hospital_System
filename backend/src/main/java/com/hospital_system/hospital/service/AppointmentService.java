@@ -9,6 +9,7 @@ import com.hospital_system.hospital.repository.AppointmentRepository;
 import com.hospital_system.hospital.repository.PatientRepository;
 import com.hospital_system.hospital.repository.ScheduleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.hospital_system.hospital.service.SystemSettingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,8 @@ public class AppointmentService {
     @Autowired
     private ScheduleRepository scheduleRepository;
 
-    private static final BigDecimal HOSPITAL_CHARGE = new BigDecimal("750.00");
+    @Autowired
+    private SystemSettingService settingService;
 
     // ================= BOOK APPOINTMENT =================
     @Transactional
@@ -62,7 +64,8 @@ public class AppointmentService {
         }
 
         BigDecimal doctorFee = schedule.getDoctor().getChannelling_fee();
-        BigDecimal totalFee = doctorFee.add(HOSPITAL_CHARGE);
+        BigDecimal hospitalCharge = settingService.getHospitalCharge();
+        BigDecimal totalFee = doctorFee.add(hospitalCharge);
 
         Appointment appointment = new Appointment(
                 patientOpt.get(),
@@ -216,5 +219,3 @@ public class AppointmentService {
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
     }
 }
-
-
