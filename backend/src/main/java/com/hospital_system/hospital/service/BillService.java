@@ -4,6 +4,7 @@ import com.hospital_system.hospital.entity.*;
 import com.hospital_system.hospital.enums.PaymentStatus;
 import com.hospital_system.hospital.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.hospital_system.hospital.service.SystemSettingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +30,8 @@ public class BillService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    private static final BigDecimal HOSPITAL_CHARGE = new BigDecimal("750.00");
+    @Autowired
+    private SystemSettingService settingService;
 
     // Create bill for appointment — splits fees into line items automatically
     @Transactional
@@ -56,7 +58,8 @@ public class BillService {
         bill = billRepository.save(bill);
 
         BigDecimal totalFee = appointment.getAppointmentFee();
-        BigDecimal doctorChannelingFee = totalFee.subtract(HOSPITAL_CHARGE);
+        BigDecimal hospitalCharge = settingService.getHospitalCharge();
+        BigDecimal doctorChannelingFee = totalFee.subtract(hospitalCharge);
 
         BillItem channelingItem = new BillItem(
                 "Doctor Channeling Fee - " + appointment.getSchedule().getDoctor().getName(),
@@ -69,7 +72,7 @@ public class BillService {
         BillItem hospitalChargeItem = new BillItem(
                 "Hospital Charge",
                 "HOSPITAL_FEE",
-                HOSPITAL_CHARGE,
+                hospitalCharge,
                 bill
         );
         billItemRepository.save(hospitalChargeItem);
