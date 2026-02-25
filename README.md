@@ -1,125 +1,107 @@
+# 🏥 Hospital Management System
 
+A full-stack Hospital Management System built with **Spring Boot (Backend)** and **React + Vite (Frontend)** to manage hospital operations such as patients, doctors, appointments, billing, schedules, and authentication.
 
-# 🏥 Hospital Management System 
+--
 
-A **Spring Boot + Spring Security + JWT + JPA** based RESTful backend for a **Hospital Management System**.
+## 🚀 Features
 
-This system provides secure role-based access for managing:
+### 👨‍⚕️ Doctor Management
 
-✅ Users & Authentication
-✅ Patients
-✅ Doctors & Schedules
-✅ Appointments
-✅ Bills & Payments
-✅ Medical Tests
+* Add / update / delete doctors
+* View doctor details
+* Specialization tracking
 
-Built with **clean layered architecture (Controller → Service → Repository)** and **JWT authentication**.
+### 🧑‍🤝‍🧑 Patient Management
+
+* Register patients
+* Update patient records
+* View patient history
+
+### 📅 Appointment Management
+
+* Book appointments
+* Update status (Pending, Confirmed, Completed, Cancelled)
+* Cancel appointments
+* Reschedule appointments
+* Track payments
+
+### 💳 Billing & Payments
+
+* Record payments
+* Track billing information
+
+### 🔐 Authentication & Authorization
+
+* JWT authentication
+* Role-based access (Admin, Receptionist, Cashier)
 
 ---
 
-# 🚀 Tech Stack
+## 🛠 Tech Stack
 
-* Java 17+
+### Backend
+
+* Java 17
 * Spring Boot
-* Spring Security (JWT Authentication)
-* Spring Data JPA (Hibernate)
-* MySQL / PostgreSQL (or any JPA-supported DB)
+* Spring Security (JWT)
+* Spring Data JPA
+* MySQL
 * Maven
-* REST APIs
+
+### Frontend
+
+* React
+* Vite
+* Axios
+* Tailwind CSS
+* React Router
 
 ---
 
-# 🔐 Authentication & Security
+## 📂 Project Structure
 
-This project uses:
-
-* JWT Token Authentication
-* Role-based Authorization
-* Stateless Sessions
-* BCrypt password encryption
-
-### Roles
-
-| Role         | Permissions                                |
-| ------------ | ------------------------------------------ |
-| ADMIN        | Full system access                         |
-| RECEPTIONIST | Patients, Doctors, Schedules, Appointments |
-| CASHIER      | Bills, Payments                            |
+```
+Hospital_System/
+│
+├── backend/        → Spring Boot API
+├── frontend/       → React frontend
+└── README.md
+```
 
 ---
 
-# 📁 Project Structure
+## ⚙️ Setup Instructions
+
+### 🔹 Backend Setup
+
+1. Navigate to backend folder:
 
 ```
-hospital/
- ┣ controller/
- ┣ service/
- ┣ repository/
- ┣ entity/
- ┣ dto/
- ┣ security/
- ┣ enums/
- ┗ config/
+cd backend
 ```
 
-### Layers
-
-* **Controller** → REST endpoints
-* **Service** → Business logic
-* **Repository** → Database access
-* **Security** → JWT + Spring Security config
-
----
-
-# ⚙️ Setup & Installation
-
-## 1️⃣ Clone repo
-
-```bash
-git clone https://github.com/your-username/hospital-backend.git
-cd hospital-backend
-```
-
-## 2️⃣ Configure database
-
-Edit:
+2. Configure database in:
 
 ```
-src/main/resources/application.properties
+application.properties
 ```
 
 Example:
 
-```properties
+```
 spring.datasource.url=jdbc:mysql://localhost:3306/hospital_db
 spring.datasource.username=root
 spring.datasource.password=your_password
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-
-jwt.secret=your_secret_key
-jwt.expiration=86400000
 ```
 
----
+3. Run backend:
 
-## 3️⃣ Run application
-
-### Maven
-
-```bash
+```
 mvn spring-boot:run
 ```
 
-### or
-
-```bash
-mvn clean install
-java -jar target/*.jar
-```
-
-Server runs on:
+Backend runs on:
 
 ```
 http://localhost:8080
@@ -127,180 +109,71 @@ http://localhost:8080
 
 ---
 
-# 🔑 Authentication Flow
+### 🔹 Frontend Setup
 
-## Register
-
-```
-POST /api/auth/register
-```
-
-### Body
-
-```json
-{
-  "name": "Admin User",
-  "username": "admin",
-  "password": "1234",
-  "role": "ADMIN"
-}
-```
-
----
-
-## Login
+1. Navigate to frontend:
 
 ```
-POST /api/auth/login
+cd frontend
 ```
 
-### Response
+2. Install dependencies:
 
-```json
-{
-  "token": "JWT_TOKEN",
-  "username": "admin",
-  "role": "ADMIN",
-  "message": "Login successful"
-}
+```
+npm install
+```
+
+3. Run app:
+
+```
+npm run dev
+```
+
+Frontend runs on:
+
+```
+http://localhost:5173
 ```
 
 ---
 
-## Use token
+## 🔑 Default Roles
 
-Add header:
+* ADMIN → Full access
+* RECEPTIONIST → Appointments & patients
+* CASHIER → Payments
+
+---
+
+## 🌐 API Base URL
 
 ```
-Authorization: Bearer <JWT_TOKEN>
+http://localhost:8080/api
 ```
 
 ---
 
-# 📌 API Endpoints
+## 📌 Future Improvements
+
+* Reports dashboard
+* Email notifications
+* Online appointment portal
+* Deployment to cloud
+* Audit logs
+* Analytics
 
 ---
 
-## 👤 Auth
 
-| Method | Endpoint             |
-| ------ | -------------------- |
-| POST   | `/api/auth/register` |
-| POST   | `/api/auth/login`    |
+## ⭐ How to Run Full System
 
----
-
-## 🧑‍⚕️ Admin
-
-| Method | Endpoint                       |
-| ------ | ------------------------------ |
-| GET    | `/api/admin/users`             |
-| POST   | `/api/admin/users`             |
-| DELETE | `/api/admin/users/{id}`        |
-| GET    | `/api/admin/users/role/{role}` |
+1. Start MySQL
+2. Run backend
+3. Run frontend
+4. Login and manage hospital data
 
 ---
 
-## 👨‍⚕️ Doctors
+## 📜 License
 
-| Method | Endpoint            |
-| ------ | ------------------- |
-| POST   | `/api/doctors/add`  |
-| GET    | `/api/doctors`      |
-| GET    | `/api/doctors/{id}` |
-
----
-
-## 📅 Schedules
-
-| Method | Endpoint                    |
-| ------ | --------------------------- |
-| POST   | `/api/schedules/add`        |
-| GET    | `/api/schedules/{doctorId}` |
-| DELETE | `/api/schedules/{id}`       |
-
----
-
-## 🧍 Patients
-
-| Method | Endpoint                 |
-| ------ | ------------------------ |
-| POST   | `/api/patients/register` |
-| GET    | `/api/patients`          |
-| GET    | `/api/patients/{id}`     |
-
----
-
-## 📆 Appointments
-
-| Method | Endpoint                                |
-| ------ | --------------------------------------- |
-| POST   | `/api/appointments/book`                |
-| GET    | `/api/appointments`                     |
-| GET    | `/api/appointments/{id}`                |
-| PUT    | `/api/appointments/{id}/status`         |
-| PUT    | `/api/appointments/{id}/cancel`         |
-| POST   | `/api/appointments/{id}/payment`        |
-| PUT    | `/api/appointments/{id}/reschedule`     |
-| GET    | `/api/appointments/status/{status}`     |
-| GET    | `/api/appointments/today`               |
-| GET    | `/api/appointments/patient/{patientId}` |
-| GET    | `/api/appointments/doctor/{doctorId}`   |
-
----
-
-## 🧪 Medical Tests
-
-| Method | Endpoint                 |
-| ------ | ------------------------ |
-| POST   | `/api/tests`             |
-| GET    | `/api/tests`             |
-| GET    | `/api/tests/type/{type}` |
-
----
-
-## 💳 Bills
-
-| Method | Endpoint                |
-| ------ | ----------------------- |
-| POST   | `/api/bill/create`      |
-| GET    | `/api/bill/all`         |
-| DELETE | `/api/bill/delete/{id}` |
-
----
-
-## 💰 Payments
-
-| Method | Endpoint              |
-| ------ | --------------------- |
-| POST   | `/api/payment/create` |
-| GET    | `/api/payment/all`    |
-
----
-
-# 🗄️ Database Entities
-
-* User
-* Role
-* Patient
-* Doctor
-* Schedule
-* Appointment
-* MedicalTest
-* Bill
-* Payment
-
----
-
-# ✨ Features
-
-✔ JWT Authentication
-✔ Role-based security
-✔ Doctor scheduling
-✔ Appointment booking
-✔ Payment tracking
-✔ Medical test management
-✔ Clean REST APIs
-✔ Scalable architecture
-
-
+This project is for educational purposes.
