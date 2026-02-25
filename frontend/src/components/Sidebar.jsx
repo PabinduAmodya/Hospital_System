@@ -42,6 +42,7 @@ function Sidebar() {
             {menuItem("/tests", "Medical Tests")}
             {menuItem("/billing", "Billing")}
             {menuItem("/users", "User Management")}
+            {menuItem("/settings", "Settings")}
           </>
         )}
 

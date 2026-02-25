@@ -76,7 +76,7 @@ function printBill(bill) {
 
   <div class="header">
     <div>
-      <div class="hospital-name">🏥 City Hospital</div>
+      <div class="hospital-name">Delta Hospital</div>
       <div class="hospital-sub">Your health, our priority</div>
     </div>
     <div class="bill-title">

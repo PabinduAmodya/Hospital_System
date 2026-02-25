@@ -10,6 +10,7 @@ import Schedules from "./pages/Schedules";
 import Billing from "./pages/Billing";
 import Users from "./pages/Users";
 import Tests from "./pages/Tests";
+import MasterData from "./pages/Masterdata";
 
 function App() {
   return (
@@ -89,6 +90,15 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={["ADMIN"]}>
             <Users />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <MasterData />
           </ProtectedRoute>
         }
       />
