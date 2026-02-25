@@ -8,15 +8,12 @@ import Button from "../components/ui/Button";
 
 function Schedules() {
   const [schedules, setSchedules] = useState([]);
-  const [doctors, setDoctors] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [q, setQ] = useState("");
+  const [doctors, setDoctors]     = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [q, setQ]                 = useState("");
 
   const [form, setForm] = useState({
-    doctorId: "",
-    day: "MONDAY",
-    startTime: "09:00",
-    endTime: "12:00",
+    doctorId: "", day: "MONDAY", startTime: "09:00", endTime: "12:00",
   });
 
   const load = async () => {
@@ -26,7 +23,6 @@ function Schedules() {
       setSchedules(sRes.data);
       setDoctors(dRes.data);
     } catch (e) {
-      console.error(e);
       alert("Failed to load schedules/doctors.");
     } finally {
       setLoading(false);
@@ -41,15 +37,14 @@ function Schedules() {
     e.preventDefault();
     try {
       await API.post("/schedules/add", {
-        doctorId: Number(form.doctorId),
-        day: form.day,
+        doctorId:  Number(form.doctorId),
+        day:       form.day,
         startTime: form.startTime,
-        endTime: form.endTime,
+        endTime:   form.endTime,
       });
       setForm({ doctorId: "", day: "MONDAY", startTime: "09:00", endTime: "12:00" });
       load();
     } catch (e) {
-      console.error(e);
       alert(e?.response?.data?.message || e?.response?.data || "Failed to add schedule");
     }
   };
@@ -60,7 +55,6 @@ function Schedules() {
       await API.delete(`/schedules/${id}`);
       load();
     } catch (e) {
-      console.error(e);
       alert("Failed to delete schedule");
     }
   };
@@ -68,12 +62,11 @@ function Schedules() {
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return schedules;
-    return schedules.filter((sc) => {
-      const doctorName = sc.doctor?.name || "";
-      return [String(sc.id), sc.day, sc.startTime, sc.endTime, doctorName].some((v) =>
-        (v || "").toString().toLowerCase().includes(s)
-      );
-    });
+    return schedules.filter((sc) =>
+      [String(sc.id), sc.doctorName || "", sc.day, sc.startTime, sc.endTime].some(
+        (v) => v.toLowerCase().includes(s)
+      )
+    );
   }, [schedules, q]);
 
   return (
@@ -94,9 +87,7 @@ function Schedules() {
             <Select name="doctorId" value={form.doctorId} onChange={onChange} required>
               <option value="">Select Doctor</option>
               {doctors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.specialization})
-                </option>
+                <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
               ))}
             </Select>
 
@@ -107,7 +98,7 @@ function Schedules() {
             </Select>
 
             <Input type="time" name="startTime" value={form.startTime} onChange={onChange} required />
-            <Input type="time" name="endTime" value={form.endTime} onChange={onChange} required />
+            <Input type="time" name="endTime"   value={form.endTime}   onChange={onChange} required />
 
             <div className="md:col-span-4 flex justify-end">
               <Button type="submit">Add Schedule</Button>
@@ -122,6 +113,7 @@ function Schedules() {
                 <tr>
                   <th className="p-3">ID</th>
                   <th className="p-3">Doctor</th>
+                  <th className="p-3">Specialization</th>
                   <th className="p-3">Day</th>
                   <th className="p-3">Start</th>
                   <th className="p-3">End</th>
@@ -132,7 +124,8 @@ function Schedules() {
                 {filtered.map((sc) => (
                   <tr key={sc.id} className="border-t">
                     <td className="p-3">{sc.id}</td>
-                    <td className="p-3 font-medium">{sc.doctor?.name}</td>
+                    <td className="p-3 font-medium">{sc.doctorName || "—"}</td>
+                    <td className="p-3 text-gray-500">{sc.doctorSpecialization || "—"}</td>
                     <td className="p-3">{sc.day}</td>
                     <td className="p-3">{sc.startTime}</td>
                     <td className="p-3">{sc.endTime}</td>
@@ -141,12 +134,9 @@ function Schedules() {
                     </td>
                   </tr>
                 ))}
-
                 {!loading && filtered.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="p-6 text-center text-gray-500">
-                      No schedules found
-                    </td>
+                    <td colSpan="7" className="p-6 text-center text-gray-500">No schedules found</td>
                   </tr>
                 )}
               </tbody>
