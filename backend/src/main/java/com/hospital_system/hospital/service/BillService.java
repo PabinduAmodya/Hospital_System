@@ -1,12 +1,14 @@
 package com.hospital_system.hospital.service;
 
 import com.hospital_system.hospital.entity.*;
+import com.hospital_system.hospital.enums.PaymentStatus;
 import com.hospital_system.hospital.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -27,33 +29,35 @@ public class BillService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    // Hospital charge constant
     private static final BigDecimal HOSPITAL_CHARGE = new BigDecimal("750.00");
 
-    // Create bill for appointment - UPDATED: Shows breakdown of fees
+    // Create bill for appointment — splits fees into line items automatically
     @Transactional
     public Bill createAppointmentBill(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        // Check if bill already exists for this appointment
-        List<Bill> existingBills = billRepository.findByAppointment(appointment);
-        if (!existingBills.isEmpty()) {
-            throw new RuntimeException("Bill already exists for this appointment");
+        // Only create a bill for CONFIRMED or COMPLETED appointments
+        switch (appointment.getStatus()) {
+            case CANCELLED:
+                throw new RuntimeException("Cannot create a bill for a cancelled appointment");
+            case RESCHEDULED:
+                throw new RuntimeException("Cannot create a bill for a rescheduled appointment — bill the new appointment instead");
+            default:
+                break;
         }
 
-        Bill bill = new Bill(
-                appointment.getPatient().getName(),
-                appointment
-        );
+        List<Bill> existingBills = billRepository.findByAppointment(appointment);
+        if (!existingBills.isEmpty()) {
+            throw new RuntimeException("A bill already exists for this appointment (Bill ID: " + existingBills.get(0).getId() + ")");
+        }
 
+        Bill bill = new Bill(appointment.getPatient().getName(), appointment);
         bill = billRepository.save(bill);
 
-        // Calculate doctor's channeling fee (Total - Hospital Charge)
         BigDecimal totalFee = appointment.getAppointmentFee();
         BigDecimal doctorChannelingFee = totalFee.subtract(HOSPITAL_CHARGE);
 
-        // Add Doctor Channeling Fee as separate bill item
         BillItem channelingItem = new BillItem(
                 "Doctor Channeling Fee - " + appointment.getSchedule().getDoctor().getName(),
                 "DOCTOR_FEE",
@@ -62,7 +66,6 @@ public class BillService {
         );
         billItemRepository.save(channelingItem);
 
-        // Add Hospital Charge as separate bill item
         BillItem hospitalChargeItem = new BillItem(
                 "Hospital Charge",
                 "HOSPITAL_FEE",
@@ -71,16 +74,19 @@ public class BillService {
         );
         billItemRepository.save(hospitalChargeItem);
 
-        // Set total amount
         bill.setTotalAmount(totalFee);
         return billRepository.save(bill);
     }
 
-    // Add medical test to existing bill
+    // Add medical test to an unpaid bill
     @Transactional
     public Bill addMedicalTestToBill(Long billId, Long testId) {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        if (bill.isPaid()) {
+            throw new RuntimeException("Cannot modify a paid bill");
+        }
 
         MedicalTest test = medicalTestRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Medical test not found"));
@@ -89,10 +95,9 @@ public class BillService {
             throw new RuntimeException("Medical test is not active");
         }
 
-        // Check if test already added to this bill
         List<BillItem> existingItems = billItemRepository.findByBill(bill);
         boolean testAlreadyAdded = existingItems.stream()
-                .anyMatch(item -> item.getItemName().contains(test.getName()));
+                .anyMatch(item -> item.getItemName().equalsIgnoreCase(test.getName()));
 
         if (testAlreadyAdded) {
             throw new RuntimeException("This test has already been added to the bill");
@@ -104,71 +109,13 @@ public class BillService {
                 test.getPrice(),
                 bill
         );
-
         billItemRepository.save(testItem);
 
-        // Update total amount
-        bill.setTotalAmount(
-                bill.getTotalAmount().add(test.getPrice())
-        );
-
+        bill.setTotalAmount(bill.getTotalAmount().add(test.getPrice()));
         return billRepository.save(bill);
     }
 
-    // Get all bills
-    public List<Bill> getAllBills() {
-        return billRepository.findAll();
-    }
-
-    // Get bill by ID
-    public Bill getBillById(Long id) {
-        return billRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bill not found with ID: " + id));
-    }
-
-    // Get bills by patient name
-    public List<Bill> getBillsByPatientName(String patientName) {
-        return billRepository.findByPatientName(patientName);
-    }
-
-    // Get unpaid bills
-    public List<Bill> getUnpaidBills() {
-        return billRepository.findByPaid(false);
-    }
-
-    // Get paid bills
-    public List<Bill> getPaidBills() {
-        return billRepository.findByPaid(true);
-    }
-
-    // Mark bill as paid
-    @Transactional
-    public Bill markBillAsPaid(Long billId, String paymentMethod) {
-        Bill bill = billRepository.findById(billId)
-                .orElseThrow(() -> new RuntimeException("Bill not found"));
-
-        if (bill.isPaid()) {
-            throw new RuntimeException("Bill is already paid");
-        }
-
-        if (paymentMethod == null || paymentMethod.trim().isEmpty()) {
-            paymentMethod = "CASH"; // Default payment method
-        }
-
-        bill.setPaid(true);
-
-        // Create payment record
-        Payment payment = new Payment(
-                bill,
-                bill.getTotalAmount(),
-                paymentMethod
-        );
-        paymentRepository.save(payment);
-
-        return billRepository.save(bill);
-    }
-
-    // Remove medical test from bill
+    // Remove a medical test bill item from an unpaid bill
     @Transactional
     public Bill removeMedicalTestFromBill(Long billId, Long billItemId) {
         Bill bill = billRepository.findById(billId)
@@ -185,47 +132,85 @@ public class BillService {
             throw new RuntimeException("Bill item does not belong to this bill");
         }
 
-        // Cannot remove doctor fee or hospital charge
         if (item.getItemType().equals("DOCTOR_FEE") || item.getItemType().equals("HOSPITAL_FEE")) {
             throw new RuntimeException("Cannot remove doctor fee or hospital charge from bill");
         }
 
-        // Subtract item price from total
-        bill.setTotalAmount(
-                bill.getTotalAmount().subtract(item.getPrice())
-        );
-
+        bill.setTotalAmount(bill.getTotalAmount().subtract(item.getPrice()));
         billItemRepository.delete(item);
-
         return billRepository.save(bill);
     }
 
-    // Delete bill (only if unpaid)
+    // Mark bill as paid — single source of truth for payment
+    // Also syncs paymentStatus on the linked appointment
+    @Transactional
+    public Bill markBillAsPaid(Long billId, String paymentMethod) {
+        Bill bill = billRepository.findById(billId)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        if (bill.isPaid()) {
+            throw new RuntimeException("Bill is already paid");
+        }
+
+        if (paymentMethod == null || paymentMethod.trim().isEmpty()) {
+            paymentMethod = "CASH";
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        bill.setPaid(true);
+        bill.setPaidAt(now);
+        bill.setPaymentMethod(paymentMethod);
+        billRepository.save(bill);
+
+        // Create payment record
+        Payment payment = new Payment(bill, bill.getTotalAmount(), paymentMethod);
+        paymentRepository.save(payment);
+
+        // Sync appointment payment fields — appointment status is NOT changed here,
+        // only the paymentStatus field is updated so lifecycle and payment are separate
+        if (bill.getAppointment() != null) {
+            Appointment appt = bill.getAppointment();
+            appt.setPaidAmount(bill.getTotalAmount());
+            appt.setPaymentStatus(PaymentStatus.PAID);
+            appt.setPaidAt(now);
+            appointmentRepository.save(appt);
+        }
+
+        return bill;
+    }
+
+    // Queries
+    public List<Bill> getAllBills() { return billRepository.findAll(); }
+
+    public Bill getBillById(Long id) {
+        return billRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bill not found with ID: " + id));
+    }
+
+    public List<Bill> getBillsByPatientId(Long patientId) {
+        return billRepository.findByPatientId(patientId);
+    }
+
+    public List<Bill> getBillsByPatientName(String patientName) {
+        return billRepository.findByPatientName(patientName);
+    }
+
+    public List<Bill> getUnpaidBills() { return billRepository.findByPaid(false); }
+
+    public List<Bill> getPaidBills() { return billRepository.findByPaid(true); }
+
     @Transactional
     public void deleteBill(Long id) {
         Bill bill = billRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bill not found"));
-
         if (bill.isPaid()) {
             throw new RuntimeException("Cannot delete a paid bill");
         }
-
         billRepository.delete(bill);
     }
 
-    // Get total revenue from paid bills
     public BigDecimal getTotalRevenue() {
-        List<Bill> paidBills = billRepository.findByPaid(true);
-        return paidBills.stream()
-                .map(Bill::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    // Get pending amount (unpaid bills)
-    public BigDecimal getPendingAmount() {
-        List<Bill> unpaidBills = billRepository.findByPaid(false);
-        return unpaidBills.stream()
-                .map(Bill::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return billRepository.sumRevenue();
     }
 }

@@ -19,24 +19,33 @@ public class BillController {
     private BillService billService;
 
     // Create bill for appointment
-    @PreAuthorize("hasAnyRole('ADMIN','CASHIER', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','RECEPTIONIST')")
     @PostMapping("/appointment/{appointmentId}")
     public ResponseEntity<?> createAppointmentBill(@PathVariable Long appointmentId) {
         try {
-            Bill bill = billService.createAppointmentBill(appointmentId);
-            return ResponseEntity.ok(bill);
+            return ResponseEntity.ok(billService.createAppointmentBill(appointmentId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     // Add medical test to existing bill
-    @PreAuthorize("hasAnyRole('ADMIN','CASHIER', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','RECEPTIONIST')")
     @PostMapping("/{billId}/add-test/{testId}")
     public ResponseEntity<?> addMedicalTest(@PathVariable Long billId, @PathVariable Long testId) {
         try {
-            Bill bill = billService.addMedicalTestToBill(billId, testId);
-            return ResponseEntity.ok(bill);
+            return ResponseEntity.ok(billService.addMedicalTestToBill(billId, testId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Remove a test line item from an unpaid bill
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','RECEPTIONIST')")
+    @DeleteMapping("/{billId}/items/{itemId}")
+    public ResponseEntity<?> removeMedicalTest(@PathVariable Long billId, @PathVariable Long itemId) {
+        try {
+            return ResponseEntity.ok(billService.removeMedicalTestFromBill(billId, itemId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -50,22 +59,21 @@ public class BillController {
     }
 
     // Get bill by ID
-    @PreAuthorize("hasAnyRole('ADMIN','CASHIER', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','RECEPTIONIST')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getBillById(@PathVariable Long id) {
         try {
-            Bill bill = billService.getBillById(id);
-            return ResponseEntity.ok(bill);
+            return ResponseEntity.ok(billService.getBillById(id));
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // Get bills by patient name
-    @PreAuthorize("hasAnyRole('ADMIN','CASHIER', 'RECEPTIONIST')")
-    @GetMapping("/patient/{patientName}")
-    public List<Bill> getBillsByPatient(@PathVariable String patientName) {
-        return billService.getBillsByPatientName(patientName);
+    // Get bills by patient ID (reliable — no name collision)
+    @PreAuthorize("hasAnyRole('ADMIN','CASHIER','RECEPTIONIST')")
+    @GetMapping("/patient/{patientId}")
+    public List<Bill> getBillsByPatient(@PathVariable Long patientId) {
+        return billService.getBillsByPatientId(patientId);
     }
 
     // Get unpaid bills
@@ -75,20 +83,19 @@ public class BillController {
         return billService.getUnpaidBills();
     }
 
-    // Mark bill as paid
+    // Mark bill as paid — the single correct payment path
     @PreAuthorize("hasAnyRole('ADMIN','CASHIER')")
     @PostMapping("/{billId}/pay")
     public ResponseEntity<?> markAsPaid(@PathVariable Long billId,
                                         @RequestBody MakePaymentDTO paymentDTO) {
         try {
-            Bill bill = billService.markBillAsPaid(billId, paymentDTO.getPaymentMethod());
-            return ResponseEntity.ok(bill);
+            return ResponseEntity.ok(billService.markBillAsPaid(billId, paymentDTO.getPaymentMethod()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // Delete bill
+    // Delete bill (admin only, unpaid only)
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBill(@PathVariable Long id) {
@@ -100,3 +107,6 @@ public class BillController {
         }
     }
 }
+
+
+

@@ -1,13 +1,14 @@
 package com.hospital_system.hospital.enums;
 
 public enum AppointmentStatus {
-    PENDING,      // Initial booking
-    CONFIRMED,    // Confirmed by receptionist
-    COMPLETED,    // Appointment finished
-    PAID,         // Payment received
-    CANCELLED,    // Cancelled appointment
-    REFUNDED,     // Payment refunded
-    RESCHEDULED ,  // Moved to different date
-    SCHEDULES,
-    BOOKED
+    PENDING,
+    CONFIRMED,
+    COMPLETED,
+    CANCELLED,
+    RESCHEDULED,
+    // Legacy values — kept only so existing DB rows don't crash on load.
+    // New code must NOT set these. Use PaymentStatus for payment tracking.
+    PAID,
+    BOOKED,
+    SCHEDULES
 }

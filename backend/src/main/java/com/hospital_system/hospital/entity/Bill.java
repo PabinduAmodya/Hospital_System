@@ -24,6 +24,10 @@ public class Bill {
 
     private boolean paid = false;
 
+    // Added: when and how the bill was paid
+    private LocalDateTime paidAt;
+    private String paymentMethod;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -45,6 +49,8 @@ public class Bill {
     public boolean isPaid() { return paid; }
     public List<BillItem> getItems() { return items; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getPaidAt() { return paidAt; }
+    public String getPaymentMethod() { return paymentMethod; }
 
     public void setId(Long id) { this.id = id; }
     public void setPatientName(String patientName) { this.patientName = patientName; }
@@ -53,4 +59,6 @@ public class Bill {
     public void setPaid(boolean paid) { this.paid = paid; }
     public void setItems(List<BillItem> items) { this.items = items; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

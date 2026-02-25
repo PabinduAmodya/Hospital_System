@@ -31,6 +31,7 @@ public class Appointment {
     @Column(nullable = false)
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
+    // Payment is tracked separately via PaymentStatus — not mixed into AppointmentStatus
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
@@ -56,17 +57,16 @@ public class Appointment {
     private LocalDateTime paidAt;
     private LocalDateTime refundedAt;
 
-    // Reference to rescheduled appointment - IGNORE BOTH TO PREVENT LOOP
+    // Reschedule chain — both sides ignored in JSON to prevent loops
     @OneToOne
     @JoinColumn(name = "rescheduled_from_id")
-    @JsonIgnore  // IGNORE THIS COMPLETELY
+    @JsonIgnore
     private Appointment rescheduledFrom;
 
     @OneToOne(mappedBy = "rescheduledFrom")
-    @JsonIgnore  // IGNORE THIS COMPLETELY
+    @JsonIgnore
     private Appointment rescheduledTo;
 
-    // Constructors
     public Appointment() {}
 
     public Appointment(Patient patient, Schedule schedule, LocalDate appointmentDate, BigDecimal appointmentFee) {

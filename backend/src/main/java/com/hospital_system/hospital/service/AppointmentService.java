@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +35,7 @@ public class AppointmentService {
 
     // ================= BOOK APPOINTMENT =================
     @Transactional
-    public Appointment bookAppointment(Long patientId, Long scheduleId, LocalDate appointmentDate, BigDecimal fee) throws Exception {
+    public Appointment bookAppointment(Long patientId, Long scheduleId, LocalDate appointmentDate) throws Exception {
 
         Optional<Patient> patientOpt = patientRepository.findById(patientId);
         Optional<Schedule> scheduleOpt = scheduleRepository.findById(scheduleId);
@@ -44,20 +45,22 @@ public class AppointmentService {
 
         Schedule schedule = scheduleOpt.get();
 
-        // Validate doctor availability using String day
-        if (!schedule.getDay().equalsIgnoreCase(appointmentDate.getDayOfWeek().name())) {
-            throw new Exception("Doctor not available on this day");
+        // FIX 1: Robust day comparison — normalize both sides to uppercase
+        String scheduleDay = schedule.getDay().trim().toUpperCase();
+        String appointmentDay = appointmentDate.getDayOfWeek().name().toUpperCase();
+        if (!scheduleDay.equals(appointmentDay)) {
+            throw new Exception("Doctor is not available on " + appointmentDate.getDayOfWeek().name()
+                    + ". This schedule is for " + schedule.getDay() + "s.");
         }
 
-        // Check daily limit
+        // FIX 2: Count only active (non-cancelled, non-rescheduled) bookings toward daily limit
         List<Appointment> existingAppointments = appointmentRepository
-                .findByDoctorIdAndDate(schedule.getDoctor().getId(), appointmentDate);
+                .findBookedSlotsByDoctorAndDate(schedule.getDoctor().getId(), appointmentDate);
 
         if (existingAppointments.size() >= 20) {
-            throw new Exception("No slots available for this date");
+            throw new Exception("No slots available for this date. Daily limit of 20 appointments reached.");
         }
 
-        // Calculate total fee
         BigDecimal doctorFee = schedule.getDoctor().getChannelling_fee();
         BigDecimal totalFee = doctorFee.add(HOSPITAL_CHARGE);
 
@@ -77,10 +80,10 @@ public class AppointmentService {
     // ================= UPDATE STATUS =================
     @Transactional
     public Appointment updateStatus(Long appointmentId, AppointmentStatus status, String notes) {
-
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+        // Guard: do not allow setting status to a value that no longer exists in the enum
         appointment.setStatus(status);
 
         if (notes != null && !notes.isEmpty()) {
@@ -88,29 +91,27 @@ public class AppointmentService {
         }
 
         appointment.setUpdatedAt(LocalDateTime.now());
-
         return appointmentRepository.save(appointment);
     }
 
     // ================= CANCEL =================
     @Transactional
     public Appointment cancelAppointment(Long appointmentId, String reason, boolean refundRequired) {
-
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
-            throw new RuntimeException("Appointment already cancelled");
+            throw new RuntimeException("Appointment is already cancelled");
         }
 
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointment.setCancellationReason(reason);
         appointment.setCancelledAt(LocalDateTime.now());
 
-        if (refundRequired &&
-                appointment.getPaidAmount() != null &&
-                appointment.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
-
+        if (refundRequired
+                && appointment.getPaymentStatus() == PaymentStatus.PAID
+                && appointment.getPaidAmount() != null
+                && appointment.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
             appointment.setRefundAmount(appointment.getPaidAmount());
             appointment.setPaymentStatus(PaymentStatus.REFUNDED);
             appointment.setRefundedAt(LocalDateTime.now());
@@ -119,39 +120,30 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    // ================= MARK PAID =================
-    @Transactional
-    public Appointment markAsPaid(Long appointmentId, BigDecimal amount) {
-
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-
-        appointment.setPaidAmount(amount);
-        appointment.setPaymentStatus(PaymentStatus.PAID);
-        appointment.setStatus(AppointmentStatus.PAID);
-        appointment.setPaidAt(LocalDateTime.now());
-
-        return appointmentRepository.save(appointment);
-    }
-
     // ================= RESCHEDULE =================
+    // FIX 3: Reschedule only to dates that match the schedule's day-of-week
+    // FIX 4: Set rescheduledFrom link on the new appointment
     @Transactional
     public Appointment rescheduleToNextAvailable(Long appointmentId) throws Exception {
-
         Appointment oldAppointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         if (oldAppointment.getStatus() == AppointmentStatus.CANCELLED) {
-            throw new Exception("Cannot reschedule cancelled appointment");
+            throw new Exception("Cannot reschedule a cancelled appointment");
         }
 
-        LocalDate nextDate = findNextAvailableDate(
+        if (oldAppointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new Exception("Cannot reschedule a completed appointment");
+        }
+
+        LocalDate nextDate = findNextAvailableDateOnScheduleDay(
                 oldAppointment.getSchedule().getDoctor().getId(),
+                oldAppointment.getSchedule().getDay(),
                 oldAppointment.getAppointmentDate()
         );
 
         if (nextDate == null) {
-            throw new Exception("No available slots found");
+            throw new Exception("No available slots found in the next 60 days on this doctor's schedule");
         }
 
         Appointment newAppointment = new Appointment(
@@ -162,31 +154,39 @@ public class AppointmentService {
         );
 
         newAppointment.setNotes("Rescheduled from " + oldAppointment.getAppointmentDate());
+        newAppointment.setStatus(AppointmentStatus.PENDING);
+        // FIX 4: Link back to original
+        newAppointment.setRescheduledFrom(oldAppointment);
 
         oldAppointment.setStatus(AppointmentStatus.RESCHEDULED);
-
         appointmentRepository.save(oldAppointment);
+
         return appointmentRepository.save(newAppointment);
     }
 
-    // ================= FIND NEXT DATE =================
-    private LocalDate findNextAvailableDate(Long doctorId, LocalDate currentDate) {
-
-        LocalDate searchDate = currentDate.plusDays(1);
-        LocalDate maxDate = currentDate.plusDays(30);
-
-        while (searchDate.isBefore(maxDate)) {
-
-            List<Appointment> bookedSlots = appointmentRepository
-                    .findBookedSlotsByDoctorAndDate(doctorId, searchDate);
-
-            if (bookedSlots.size() < 20) {
-                return searchDate;
-            }
-
-            searchDate = searchDate.plusDays(1);
+    // FIX 3 helper: Only advance to dates that match the schedule's day
+    private LocalDate findNextAvailableDateOnScheduleDay(Long doctorId, String scheduleDay, LocalDate currentDate) {
+        DayOfWeek targetDay;
+        try {
+            targetDay = DayOfWeek.valueOf(scheduleDay.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
         }
 
+        LocalDate searchDate = currentDate.plusDays(1);
+        LocalDate maxDate = currentDate.plusDays(60);
+
+        while (searchDate.isBefore(maxDate)) {
+            // Only check dates that match the schedule day
+            if (searchDate.getDayOfWeek() == targetDay) {
+                List<Appointment> bookedSlots = appointmentRepository
+                        .findBookedSlotsByDoctorAndDate(doctorId, searchDate);
+                if (bookedSlots.size() < 20) {
+                    return searchDate;
+                }
+            }
+            searchDate = searchDate.plusDays(1);
+        }
         return null;
     }
 
