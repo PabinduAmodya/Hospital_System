@@ -56,9 +56,11 @@ public class BillController {
     @PreAuthorize("hasAnyRole('ADMIN','CASHIER','RECEPTIONIST')")
     @PostMapping("/patient/{patientId}/tests")
     public ResponseEntity<?> createTestBill(@PathVariable Long patientId,
-                                            @RequestBody Map<String, List<Long>> body) {
+                                            @RequestBody Map<String, List<Object>> body) {
         try {
-            List<Long> testIds = body.get("testIds");
+            List<Long> testIds = body.get("testIds").stream()
+                    .map(o -> ((Number) o).longValue())
+                    .collect(java.util.stream.Collectors.toList());
             return ResponseEntity.ok(billService.createTestOnlyBill(patientId, testIds));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

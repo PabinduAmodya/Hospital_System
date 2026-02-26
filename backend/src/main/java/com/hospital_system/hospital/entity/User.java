@@ -32,6 +32,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    private String email; // used for password reset emails
+
     // Constructors
     public User() {}
 
@@ -111,7 +113,7 @@ public class User implements UserDetails {
         this.role = role;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }
