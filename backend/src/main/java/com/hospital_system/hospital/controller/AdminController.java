@@ -6,6 +6,7 @@ import com.hospital_system.hospital.exception.BadRequestException;
 import com.hospital_system.hospital.exception.ResourceNotFoundException;
 import com.hospital_system.hospital.repository.UserRepository;
 import jakarta.validation.Valid;
+import com.hospital_system.hospital.service.PasswordResetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,9 @@ public class AdminController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private PasswordResetService passwordResetService;
+
     // Get all users
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
@@ -38,8 +42,14 @@ public class AdminController {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new BadRequestException("Username already exists");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        String rawPassword = user.getPassword();
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        User saved = userRepository.save(user);
+        // Send welcome email if email provided
+        if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
+            passwordResetService.sendWelcome(saved, rawPassword);
+        }
+        return saved;
     }
 
     // Update user (name/username/role, optional password)
@@ -64,6 +74,7 @@ public class AdminController {
         if (user.getPassword() != null && !user.getPassword().isBlank()) {
             existing.setPassword(passwordEncoder.encode(user.getPassword()));
         }
+        if (user.getEmail() != null) existing.setEmail(user.getEmail());
 
         return userRepository.save(existing);
     }
