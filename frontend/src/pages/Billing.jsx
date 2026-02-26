@@ -49,7 +49,7 @@ function printBill(bill) {
     @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{margin:0;padding:20px}}
   </style></head><body><div class="page">
   <div class="header">
-    <div><div class="hosp">🏥 City Hospital</div><div class="hosp-sub">Your health, our priority</div></div>
+    <div><div class="hosp">Delta Hospital</div><div class="hosp-sub">Your health, our priority</div></div>
     <div class="bill-title"><h2>RECEIPT</h2><p>Bill #${bill.id}</p><p>${isTestOnly ? "Medical Tests" : "Appointment"}</p><p>Issued: ${new Date(bill.createdAt || Date.now()).toLocaleDateString()}</p></div>
   </div>
   <div class="info-grid">
@@ -314,7 +314,7 @@ function Billing() {
               <Input placeholder="Search bills..." value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             {(role === "ADMIN" || role === "CASHIER" || role === "RECEPTIONIST") && (
-              <Button onClick={openTestBill}>🧪 New Test Bill</Button>
+              <Button onClick={openTestBill}>Generate New Test Bill</Button>
             )}
           </div>
         </div>
@@ -393,11 +393,11 @@ function Billing() {
                   {detailBill.paidAt ? new Date(detailBill.paidAt).toLocaleString() : "—"}
                 </div>
               )}
-              {detailBill.billType === "TEST_ONLY" && (
+              {/* {detailBill.billType === "TEST_ONLY" && (
                 <div className="bg-purple-50 border border-purple-100 text-purple-700 px-3 py-2 rounded text-sm">
                   🧪 Medical Tests Bill — not linked to an appointment
                 </div>
-              )}
+              )} */}
 
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">

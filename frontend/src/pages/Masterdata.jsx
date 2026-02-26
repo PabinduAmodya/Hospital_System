@@ -58,7 +58,7 @@ function MasterData() {
     }
   };
 
-  // ── Specialization handlers ──────────────────────────────────────────
+  // ── Specialization handlers ────────
   const addSpec = async () => {
     const trimmed = newSpec.trim();
     if (!trimmed) return;
