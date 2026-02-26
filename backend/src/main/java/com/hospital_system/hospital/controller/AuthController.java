@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import com.hospital_system.hospital.entity.User;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -101,4 +104,57 @@ public class AuthController {
                     .body("An error occurred during registration");
         }
     }
+
+    // GET /api/auth/me — return current user profile
+    @GetMapping("/me")
+    public ResponseEntity<?> getMe(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) return ResponseEntity.status(401).body("Not authenticated");
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(java.util.Map.of(
+                "id",       user.getId(),
+                "name",     user.getName() != null ? user.getName() : "",
+                "username", user.getUsername(),
+                "email",    user.getEmail() != null ? user.getEmail() : "",
+                "role",     user.getRole().name()
+        ));
+    }
+
+    // PUT /api/auth/me — update current user's name + email
+    @PutMapping("/me")
+    public ResponseEntity<?> updateMe(@AuthenticationPrincipal UserDetails userDetails,
+                                      @RequestBody java.util.Map<String, String> body) {
+        if (userDetails == null) return ResponseEntity.status(401).body("Not authenticated");
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (body.containsKey("name")  && body.get("name")  != null) user.setName(body.get("name"));
+        if (body.containsKey("email") && body.get("email") != null) user.setEmail(body.get("email"));
+        userRepository.save(user);
+        return ResponseEntity.ok(java.util.Map.of(
+                "id",       user.getId(),
+                "name",     user.getName() != null ? user.getName() : "",
+                "username", user.getUsername(),
+                "email",    user.getEmail() != null ? user.getEmail() : "",
+                "role",     user.getRole().name()
+        ));
+    }
+
+    // POST /api/auth/change-password — change own password (requires current password)
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal UserDetails userDetails,
+                                            @RequestBody java.util.Map<String, String> body) {
+        if (userDetails == null) return ResponseEntity.status(401).body("Not authenticated");
+        String currentPassword = body.get("currentPassword");
+        String newPassword     = body.get("newPassword");
+        if (newPassword == null || newPassword.length() < 6)
+            return ResponseEntity.badRequest().body("New password must be at least 6 characters");
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!passwordEncoder.matches(currentPassword, user.getPassword()))
+            return ResponseEntity.badRequest().body("Current password is incorrect");
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return ResponseEntity.ok("Password changed successfully");
+    }
+
 }
