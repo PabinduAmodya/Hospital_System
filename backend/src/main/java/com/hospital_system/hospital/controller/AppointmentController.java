@@ -22,7 +22,7 @@ public class AppointmentController {
     private AppointmentService appointmentService;
 
     // Book new appointment — fee is auto-calculated from doctor + hospital charge
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @PostMapping("/book")
     public ResponseEntity<?> bookAppointment(@RequestBody AppointmentDTO appointmentDTO) {
         try {
@@ -38,14 +38,14 @@ public class AppointmentController {
     }
 
     // Get all appointments
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
     @GetMapping
     public List<Appointment> getAllAppointments() {
         return appointmentService.getAllAppointments();
     }
 
     // Get appointment by ID
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getAppointmentById(@PathVariable Long id) {
         try {
@@ -56,7 +56,7 @@ public class AppointmentController {
     }
 
     // Update appointment status (PENDING → CONFIRMED → COMPLETED → CANCELLED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
                                           @RequestBody StatusUpdateDTO statusUpdate) {
@@ -73,7 +73,7 @@ public class AppointmentController {
     }
 
     // Cancel appointment
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelAppointment(@PathVariable Long id,
                                                @RequestBody CancelAppointmentDTO cancelDTO) {
@@ -90,7 +90,7 @@ public class AppointmentController {
     }
 
     // Reschedule appointment to next available date on same schedule day
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @PutMapping("/{id}/reschedule")
     public ResponseEntity<?> rescheduleAppointment(@PathVariable Long id) {
         try {
@@ -102,30 +102,56 @@ public class AppointmentController {
     }
 
     // Get appointments by status
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
     @GetMapping("/status/{status}")
     public List<Appointment> getByStatus(@PathVariable AppointmentStatus status) {
         return appointmentService.getAppointmentsByStatus(status);
     }
 
     // Get today's appointments
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
     @GetMapping("/today")
     public List<Appointment> getTodayAppointments() {
         return appointmentService.getTodayAppointments();
     }
 
     // Get appointments by patient
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
     @GetMapping("/patient/{patientId}")
     public List<Appointment> getByPatient(@PathVariable Long patientId) {
         return appointmentService.getAppointmentsByPatient(patientId);
     }
 
     // Get appointments by doctor
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
     @GetMapping("/doctor/{doctorId}")
     public List<Appointment> getByDoctor(@PathVariable Long doctorId) {
         return appointmentService.getAppointmentsByDoctor(doctorId);
     }
+
+    // Get available future dates for rescheduling — used by frontend date picker modal
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
+    @GetMapping("/{id}/available-dates")
+    public ResponseEntity<?> getAvailableDates(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(appointmentService.getAvailableDatesForReschedule(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Reschedule to a specific chosen date
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
+    @PutMapping("/{id}/reschedule-to")
+    public ResponseEntity<?> rescheduleToDate(@PathVariable Long id,
+                                              @RequestBody java.util.Map<String, String> body) {
+        try {
+            java.time.LocalDate newDate = java.time.LocalDate.parse(body.get("date"));
+            Appointment appt = appointmentService.rescheduleToDate(id, newDate);
+            return ResponseEntity.ok(appt);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

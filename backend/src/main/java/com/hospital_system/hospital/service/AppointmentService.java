@@ -218,4 +218,82 @@ public class AppointmentService {
         return appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
     }
+
+    // ================= GET AVAILABLE FUTURE DATES FOR RESCHEDULE =================
+    // Returns up to 10 future dates where the doctor has available slots
+    public List<LocalDate> getAvailableDatesForReschedule(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        String scheduleDay = appointment.getSchedule().getDay();
+        Long doctorId = appointment.getSchedule().getDoctor().getId();
+
+        DayOfWeek targetDay;
+        try {
+            targetDay = DayOfWeek.valueOf(scheduleDay.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return List.of();
+        }
+
+        List<LocalDate> availableDates = new java.util.ArrayList<>();
+        LocalDate searchDate = LocalDate.now().plusDays(1);
+        LocalDate maxDate    = LocalDate.now().plusDays(90); // look 90 days ahead
+
+        while (searchDate.isBefore(maxDate) && availableDates.size() < 10) {
+            if (searchDate.getDayOfWeek() == targetDay) {
+                List<Appointment> booked = appointmentRepository
+                        .findBookedSlotsByDoctorAndDate(doctorId, searchDate);
+                if (booked.size() < 20) {
+                    availableDates.add(searchDate);
+                }
+            }
+            searchDate = searchDate.plusDays(1);
+        }
+        return availableDates;
+    }
+
+    // ================= RESCHEDULE TO SPECIFIC DATE =================
+    // Updates the SAME appointment — no new record created
+    @Transactional
+    public Appointment rescheduleToDate(Long appointmentId, LocalDate newDate) throws Exception {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new Exception("Cannot reschedule a cancelled appointment");
+        }
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new Exception("Cannot reschedule a completed appointment");
+        }
+        if (!newDate.isAfter(LocalDate.now())) {
+            throw new Exception("Reschedule date must be in the future");
+        }
+
+        // Validate the new date matches the doctor schedule day
+        String scheduleDay = appointment.getSchedule().getDay().trim().toUpperCase();
+        String newDay      = newDate.getDayOfWeek().name().toUpperCase();
+        if (!scheduleDay.equals(newDay)) {
+            throw new Exception("Selected date does not match doctor schedule day (" + scheduleDay + ")");
+        }
+
+        // Check slots available on that date (exclude this appointment itself)
+        List<Appointment> booked = appointmentRepository
+                .findBookedSlotsByDoctorAndDate(appointment.getSchedule().getDoctor().getId(), newDate);
+        long othersBooked = booked.stream().filter(b -> !b.getId().equals(appointmentId)).count();
+        if (othersBooked >= 20) {
+            throw new Exception("No slots available on " + newDate + ". Daily limit reached.");
+        }
+
+        // Update date, set status to RESCHEDULED, keep note history
+        String oldDate = appointment.getAppointmentDate().toString();
+        appointment.setAppointmentDate(newDate);
+        appointment.setStatus(AppointmentStatus.RESCHEDULED);
+        appointment.setNotes("Rescheduled from " + oldDate
+                + (appointment.getNotes() != null && !appointment.getNotes().isBlank()
+                ? " | " + appointment.getNotes() : ""));
+        appointment.setUpdatedAt(LocalDateTime.now());
+
+        return appointmentRepository.save(appointment);
+    }
+
 }
