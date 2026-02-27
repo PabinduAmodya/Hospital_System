@@ -54,8 +54,10 @@ function Sidebar() {
         {/* CASHIER */}
         {role === "CASHIER" && (<>
           <div className="mt-4 mb-2 text-xs uppercase tracking-wider text-slate-400">Cashier</div>
+          {menuItem("/patients",    "🧑‍⚕️ Patients")}
           {menuItem("/billing",     "💳 Billing")}
           {menuItem("/tests",       "🧪 Medical Tests")}
+          {menuItem("/doctors",     "👨‍⚕️ Doctors")}
         </>)}
       </ul>
     </div>

@@ -26,21 +26,21 @@ public class MedicalTestController {
     }
 
     // READ all active
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST' ,'CASHIER')")
     @GetMapping
     public List<MedicalTest> getAllTests() {
         return medicalTestService.getAllActive();
     }
 
     // READ one
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @GetMapping("/{id}")
     public MedicalTest getTestById(@PathVariable Long id) {
         return medicalTestService.getById(id);
     }
 
     // READ by type
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @GetMapping("/type/{type}")
     public List<MedicalTest> getTestsByType(@PathVariable TestType type) {
         return medicalTestService.getByType(type);

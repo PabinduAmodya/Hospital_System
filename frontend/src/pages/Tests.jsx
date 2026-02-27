@@ -7,7 +7,7 @@ import Select from "../components/ui/Select";
 import Button from "../components/ui/Button";
 import Modal from "../components/ui/Modal";
 
-const TYPES = ["LAB", "XRAY", "SCAN", "OTHER"];
+const TYPES = ["LAB", "XRAY", "SCAN", "RADIOLOGY", "OTHER"];
 
 const typePill = (type) => {
   const map = {

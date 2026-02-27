@@ -33,14 +33,14 @@ public class DoctorController {
     }
 
     // READ all
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @GetMapping
     public List<Doctor> getAllDoctors() {
         return doctorService.getAll();
     }
 
     // READ one
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @GetMapping("/{id}")
     public Doctor getDoctorById(@PathVariable Long id) {
         return doctorService.getById(id);

@@ -20,7 +20,7 @@ public class PatientController {
     private PatientService patientService;
 
     // CREATE
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @PostMapping("/register")
     public Patient registerPatient(@Valid @RequestBody PatientDTO patientDTO) {
         Patient patient = new Patient(
@@ -34,14 +34,14 @@ public class PatientController {
     }
 
     // READ all
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @GetMapping
     public List<Patient> getAllPatients() {
         return patientService.getAll();
     }
 
     // READ one
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST','CASHIER')")
     @GetMapping("/{id}")
     public Patient getPatientById(@PathVariable Long id) {
         return patientService.getById(id);
