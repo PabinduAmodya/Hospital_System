@@ -38,13 +38,13 @@ function App() {
       } />
 
       <Route path="/patients" element={
-        <ProtectedRoute allowedRoles={["ADMIN","RECEPTIONIST"]}>
+        <ProtectedRoute allowedRoles={["ADMIN","RECEPTIONIST","CASHIER"]}>
           <Patients />
         </ProtectedRoute>
       } />
 
       <Route path="/doctors" element={
-        <ProtectedRoute allowedRoles={["ADMIN","RECEPTIONIST"]}>
+        <ProtectedRoute allowedRoles={["ADMIN","RECEPTIONIST","CASHIER"]}>
           <Doctors />
         </ProtectedRoute>
       } />

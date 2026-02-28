@@ -122,4 +122,19 @@ public class BillController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // Process refund for a paid bill
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
+    @PostMapping("/{billId}/refund")
+    public ResponseEntity<?> processRefund(@PathVariable Long billId,
+                                           @RequestBody Map<String, String> body) {
+        try {
+            String reason = body.getOrDefault("reason", "");
+            String method = body.getOrDefault("refundMethod", "CASH");
+            return ResponseEntity.ok(billService.processRefund(billId, reason, method));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

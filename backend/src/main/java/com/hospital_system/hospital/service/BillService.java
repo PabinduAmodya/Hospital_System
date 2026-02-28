@@ -264,4 +264,47 @@ public class BillService {
     public BigDecimal getTotalRevenue() {
         return billRepository.sumRevenue();
     }
+
+    // Process refund for a paid bill — records refund transaction for reporting
+    @Transactional
+    public Bill processRefund(Long billId, String refundReason, String refundMethod) {
+        Bill bill = billRepository.findById(billId)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        if (!bill.isPaid()) {
+            throw new RuntimeException("Cannot refund an unpaid bill");
+        }
+        if (bill.isRefunded()) {
+            throw new RuntimeException("Bill has already been refunded");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Mark bill as refunded
+        bill.setRefunded(true);
+        bill.setRefundAmount(bill.getTotalAmount());
+        bill.setRefundReason(refundReason);
+        bill.setRefundMethod(refundMethod != null ? refundMethod : "CASH");
+        bill.setRefundedAt(now);
+        billRepository.save(bill);
+
+        // Create a refund payment record (negative amount) for reporting
+        Payment refundPayment = new Payment(bill, bill.getTotalAmount().negate(), refundMethod != null ? refundMethod : "CASH");
+        refundPayment.setRefund(true);
+        refundPayment.setRefundReason(refundReason);
+        refundPayment.setPaidAt(now);
+        paymentRepository.save(refundPayment);
+
+        // Sync appointment payment status to REFUNDED if linked
+        if (bill.getAppointment() != null) {
+            Appointment appt = bill.getAppointment();
+            appt.setPaymentStatus(com.hospital_system.hospital.enums.PaymentStatus.REFUNDED);
+            appt.setRefundAmount(bill.getTotalAmount());
+            appt.setRefundedAt(now);
+            appointmentRepository.save(appt);
+        }
+
+        return bill;
+    }
+
 }

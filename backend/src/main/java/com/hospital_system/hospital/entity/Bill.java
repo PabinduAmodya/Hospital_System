@@ -32,6 +32,13 @@ public class Bill {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Refund tracking
+    private boolean refunded = false;
+    private BigDecimal refundAmount;
+    private String refundReason;
+    private String refundMethod;
+    private LocalDateTime refundedAt;
+
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<BillItem> items;
@@ -67,4 +74,15 @@ public class Bill {
     public void setPatientId(Long patientId) { this.patientId = patientId; }
     public void setBillType(String billType) { this.billType = billType; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public boolean isRefunded() { return refunded; }
+    public void setRefunded(boolean refunded) { this.refunded = refunded; }
+    public BigDecimal getRefundAmount() { return refundAmount; }
+    public void setRefundAmount(BigDecimal refundAmount) { this.refundAmount = refundAmount; }
+    public String getRefundReason() { return refundReason; }
+    public void setRefundReason(String refundReason) { this.refundReason = refundReason; }
+    public String getRefundMethod() { return refundMethod; }
+    public void setRefundMethod(String refundMethod) { this.refundMethod = refundMethod; }
+    public LocalDateTime getRefundedAt() { return refundedAt; }
+    public void setRefundedAt(LocalDateTime refundedAt) { this.refundedAt = refundedAt; }
 }

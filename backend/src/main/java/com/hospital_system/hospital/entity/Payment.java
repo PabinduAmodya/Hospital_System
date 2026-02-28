@@ -24,6 +24,10 @@ public class Payment {
 
     private LocalDateTime paidAt = LocalDateTime.now();
 
+    // If this is a refund transaction
+    private boolean isRefund = false;
+    private String refundReason;
+
     public Payment() {}
 
     public Payment(Bill bill, BigDecimal amountPaid, String paymentMethod) {
@@ -42,4 +46,11 @@ public class Payment {
     public void setBill(Bill bill) { this.bill = bill; }
     public void setAmountPaid(BigDecimal amountPaid) { this.amountPaid = amountPaid; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public boolean isRefund() { return isRefund; }
+    public void setRefund(boolean refund) { isRefund = refund; }
+    public String getRefundReason() { return refundReason; }
+    public void setRefundReason(String refundReason) { this.refundReason = refundReason; }
+    public LocalDateTime getPaidAt() { return paidAt; }
+    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
 }

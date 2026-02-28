@@ -264,9 +264,9 @@ function Dashboard() {
         {/* Quick tips */}
         <Card title="Quick Tips">
           <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
-            <li>Receptionist: create patients, schedules, appointments.</li>
+            {/* <li>Receptionist: create patients, schedules, appointments.</li>
             <li>Cashier: manage bills and payments.</li>
-            <li>Admin: full access + user management.</li>
+            <li>Admin: full access + user management.</li> */}
           </ul>
         </Card>
 
