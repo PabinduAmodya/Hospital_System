@@ -11,7 +11,11 @@ function ProtectedRoute({ children, allowedRoles }) {
 
   // If role restriction exists and role not allowed
   if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/dashboard" replace />;
+    if (role === "DOCTOR") {
+      return <Navigate to="/doctor/dashboard" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return children;
