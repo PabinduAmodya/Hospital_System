@@ -115,6 +115,19 @@ public class AppointmentController {
         return appointmentService.getTodayAppointments();
     }
 
+    // Get today's appointment queue sorted by token number
+    @GetMapping("/today/queue")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
+    public ResponseEntity<?> getTodayQueue() {
+        List<Appointment> todayAppointments = appointmentService.getTodayAppointments();
+        todayAppointments.sort((a, b) -> {
+            if (a.getTokenNumber() == null) return 1;
+            if (b.getTokenNumber() == null) return -1;
+            return a.getTokenNumber().compareTo(b.getTokenNumber());
+        });
+        return ResponseEntity.ok(todayAppointments);
+    }
+
     // Get appointments by patient
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'CASHIER')")
     @GetMapping("/patient/{patientId}")

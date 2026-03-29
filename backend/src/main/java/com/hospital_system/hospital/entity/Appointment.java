@@ -53,6 +53,8 @@ public class Appointment {
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
+    private Integer tokenNumber;
+
     private LocalDateTime cancelledAt;
     private LocalDateTime paidAt;
     private LocalDateTime refundedAt;
@@ -132,6 +134,9 @@ public class Appointment {
 
     public LocalDateTime getRefundedAt() { return refundedAt; }
     public void setRefundedAt(LocalDateTime refundedAt) { this.refundedAt = refundedAt; }
+
+    public Integer getTokenNumber() { return tokenNumber; }
+    public void setTokenNumber(Integer tokenNumber) { this.tokenNumber = tokenNumber; }
 
     public Appointment getRescheduledFrom() { return rescheduledFrom; }
     public void setRescheduledFrom(Appointment rescheduledFrom) { this.rescheduledFrom = rescheduledFrom; }
