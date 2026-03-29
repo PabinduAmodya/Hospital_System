@@ -39,6 +39,45 @@ public class Bill {
     private String refundMethod;
     private LocalDateTime refundedAt;
 
+    // ── Real-world billing fields ──
+
+    // Auto-generated bill number (e.g., "BILL-2026-00001")
+    @Column(unique = true)
+    private String billNumber;
+
+    // Discount
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+    private String discountReason; // e.g., "Senior Citizen", "Staff", "Insurance", "Custom"
+    private BigDecimal discountPercentage; // null if flat amount discount
+
+    // Tax
+    private BigDecimal taxPercentage = BigDecimal.ZERO;
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
+    // Subtotal (before discount and tax)
+    private BigDecimal subTotal = BigDecimal.ZERO;
+
+    // Net amount after discount, before tax (subTotal - discountAmount)
+    private BigDecimal netAmount = BigDecimal.ZERO;
+
+    // Partial payment tracking
+    private BigDecimal paidAmount = BigDecimal.ZERO;
+    private BigDecimal dueAmount = BigDecimal.ZERO;
+    private String paymentStatus = "UNPAID"; // UNPAID, PARTIAL, PAID, REFUNDED
+
+    // Notes
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    // Who created/processed this bill
+    private String createdBy;
+    private String paidBy; // cashier who processed payment
+
+    // Insurance
+    private String insuranceProvider;
+    private String insurancePolicyNumber;
+    private BigDecimal insuranceCoverage = BigDecimal.ZERO;
+
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<BillItem> items;
@@ -85,4 +124,57 @@ public class Bill {
     public void setRefundMethod(String refundMethod) { this.refundMethod = refundMethod; }
     public LocalDateTime getRefundedAt() { return refundedAt; }
     public void setRefundedAt(LocalDateTime refundedAt) { this.refundedAt = refundedAt; }
+
+    // ── Getters & Setters for real-world billing fields ──
+
+    public String getBillNumber() { return billNumber; }
+    public void setBillNumber(String billNumber) { this.billNumber = billNumber; }
+
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+
+    public String getDiscountReason() { return discountReason; }
+    public void setDiscountReason(String discountReason) { this.discountReason = discountReason; }
+
+    public BigDecimal getDiscountPercentage() { return discountPercentage; }
+    public void setDiscountPercentage(BigDecimal discountPercentage) { this.discountPercentage = discountPercentage; }
+
+    public BigDecimal getTaxPercentage() { return taxPercentage; }
+    public void setTaxPercentage(BigDecimal taxPercentage) { this.taxPercentage = taxPercentage; }
+
+    public BigDecimal getTaxAmount() { return taxAmount; }
+    public void setTaxAmount(BigDecimal taxAmount) { this.taxAmount = taxAmount; }
+
+    public BigDecimal getSubTotal() { return subTotal; }
+    public void setSubTotal(BigDecimal subTotal) { this.subTotal = subTotal; }
+
+    public BigDecimal getNetAmount() { return netAmount; }
+    public void setNetAmount(BigDecimal netAmount) { this.netAmount = netAmount; }
+
+    public BigDecimal getPaidAmount() { return paidAmount; }
+    public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
+
+    public BigDecimal getDueAmount() { return dueAmount; }
+    public void setDueAmount(BigDecimal dueAmount) { this.dueAmount = dueAmount; }
+
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getPaidBy() { return paidBy; }
+    public void setPaidBy(String paidBy) { this.paidBy = paidBy; }
+
+    public String getInsuranceProvider() { return insuranceProvider; }
+    public void setInsuranceProvider(String insuranceProvider) { this.insuranceProvider = insuranceProvider; }
+
+    public String getInsurancePolicyNumber() { return insurancePolicyNumber; }
+    public void setInsurancePolicyNumber(String insurancePolicyNumber) { this.insurancePolicyNumber = insurancePolicyNumber; }
+
+    public BigDecimal getInsuranceCoverage() { return insuranceCoverage; }
+    public void setInsuranceCoverage(BigDecimal insuranceCoverage) { this.insuranceCoverage = insuranceCoverage; }
 }

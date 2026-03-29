@@ -73,6 +73,74 @@ public class SystemSettingService {
                 .collect(Collectors.joining(","));
         return setValue(KEY_SPECIALIZATIONS, joined, "Comma-separated list of doctor specializations");
     }
+
+    // ── Billing Settings ──
+
+    public BigDecimal getTaxRate() {
+        String val = getValue("tax_rate", "0");
+        return new BigDecimal(val);
+    }
+
+    public void setTaxRate(BigDecimal rate) {
+        setValue("tax_rate", rate.toPlainString(), "Tax percentage applied to bills");
+    }
+
+    public String getHospitalName() {
+        return getValue("hospital_name", "Delta Hospital");
+    }
+
+    public void setHospitalName(String name) {
+        setValue("hospital_name", name, "Hospital display name for receipts");
+    }
+
+    public String getHospitalAddress() {
+        return getValue("hospital_address", "123 Medical Avenue, Colombo 07, Sri Lanka");
+    }
+
+    public void setHospitalAddress(String address) {
+        setValue("hospital_address", address, "Hospital address for receipts");
+    }
+
+    public String getHospitalPhone() {
+        return getValue("hospital_phone", "+94 11 234 5678");
+    }
+
+    public void setHospitalPhone(String phone) {
+        setValue("hospital_phone", phone, "Hospital phone for receipts");
+    }
+
+    public String getHospitalEmail() {
+        return getValue("hospital_email", "info@deltahospital.lk");
+    }
+
+    public void setHospitalEmail(String email) {
+        setValue("hospital_email", email, "Hospital email for receipts");
+    }
+
+    public List<String> getDiscountReasons() {
+        String val = getValue("discount_reasons", "Senior Citizen,Staff Discount,Insurance,Loyalty,Custom");
+        return Arrays.stream(val.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    public void setDiscountReasons(List<String> reasons) {
+        setValue("discount_reasons", String.join(",", reasons), "Available discount reasons for billing");
+    }
+
+    public List<String> getPaymentMethods() {
+        String val = getValue("payment_methods", "CASH,CARD,ONLINE,BANK_TRANSFER,CHEQUE,INSURANCE");
+        return Arrays.stream(val.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    public void setPaymentMethods(List<String> methods) {
+        setValue("payment_methods", String.join(",", methods), "Available payment methods");
+    }
 }
 
 

@@ -16,6 +16,12 @@ public class BillItem {
     private String itemType;
     private BigDecimal price;
 
+    private Integer quantity = 1;
+    private BigDecimal unitPrice; // original unit price
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+    private BigDecimal totalPrice; // (unitPrice * quantity) - discountAmount
+    private String description; // optional notes for this line item
+
     @ManyToOne
     @JoinColumn(name = "bill_id")
     @JsonBackReference
@@ -28,6 +34,23 @@ public class BillItem {
         this.itemType = itemType;
         this.price = price;
         this.bill = bill;
+        this.unitPrice = price;
+        this.totalPrice = price;
+    }
+
+    public BillItem(String itemName, String itemType, BigDecimal price, Bill bill,
+                    Integer quantity, BigDecimal unitPrice, BigDecimal discountAmount, String description) {
+        this.itemName = itemName;
+        this.itemType = itemType;
+        this.price = price;
+        this.bill = bill;
+        this.quantity = quantity != null ? quantity : 1;
+        this.unitPrice = unitPrice != null ? unitPrice : price;
+        this.discountAmount = discountAmount != null ? discountAmount : BigDecimal.ZERO;
+        this.description = description;
+        // Calculate totalPrice: (unitPrice * quantity) - discountAmount
+        BigDecimal up = this.unitPrice != null ? this.unitPrice : BigDecimal.ZERO;
+        this.totalPrice = up.multiply(BigDecimal.valueOf(this.quantity)).subtract(this.discountAmount);
     }
 
     // Getters & Setters
@@ -42,4 +65,19 @@ public class BillItem {
     public void setItemType(String itemType) { this.itemType = itemType; }
     public void setPrice(BigDecimal price) { this.price = price; }
     public void setBill(Bill bill) { this.bill = bill; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }
