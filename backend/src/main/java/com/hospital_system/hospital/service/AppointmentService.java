@@ -35,6 +35,9 @@ public class AppointmentService {
     @Autowired
     private SystemSettingService settingService;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     // ================= BOOK APPOINTMENT =================
     @Transactional
     public Appointment bookAppointment(Long patientId, Long scheduleId, LocalDate appointmentDate) throws Exception {
@@ -77,7 +80,13 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.PENDING);
         appointment.setCreatedAt(LocalDateTime.now());
 
-        return appointmentRepository.save(appointment);
+        // Generate daily token number
+        Integer maxToken = appointmentRepository.findMaxTokenNumberForDate(appointmentDate);
+        appointment.setTokenNumber(maxToken + 1);
+
+        Appointment saved = appointmentRepository.save(appointment);
+        try { auditLogService.log("CREATE", "APPOINTMENT", saved.getId(), "Booked appointment for patient " + patientOpt.get().getName() + " with Dr. " + schedule.getDoctor().getName()); } catch (Exception e) { /* audit log should never break main flow */ }
+        return saved;
     }
 
     // ================= UPDATE STATUS =================
@@ -94,7 +103,9 @@ public class AppointmentService {
         }
 
         appointment.setUpdatedAt(LocalDateTime.now());
-        return appointmentRepository.save(appointment);
+        Appointment updated = appointmentRepository.save(appointment);
+        try { auditLogService.log("UPDATE", "APPOINTMENT", updated.getId(), "Updated appointment status to " + status); } catch (Exception e) { /* audit log should never break main flow */ }
+        return updated;
     }
 
     // ================= CANCEL =================
@@ -120,7 +131,9 @@ public class AppointmentService {
             appointment.setRefundedAt(LocalDateTime.now());
         }
 
-        return appointmentRepository.save(appointment);
+        Appointment cancelled = appointmentRepository.save(appointment);
+        try { auditLogService.log("CANCEL", "APPOINTMENT", appointmentId, "Cancelled appointment. Reason: " + reason); } catch (Exception e) { /* audit log should never break main flow */ }
+        return cancelled;
     }
 
     // ================= RESCHEDULE =================
@@ -164,7 +177,9 @@ public class AppointmentService {
         oldAppointment.setStatus(AppointmentStatus.RESCHEDULED);
         appointmentRepository.save(oldAppointment);
 
-        return appointmentRepository.save(newAppointment);
+        Appointment saved = appointmentRepository.save(newAppointment);
+        try { auditLogService.log("RESCHEDULE", "APPOINTMENT", saved.getId(), "Rescheduled appointment from " + oldAppointment.getAppointmentDate() + " to " + nextDate); } catch (Exception e) { /* audit log should never break main flow */ }
+        return saved;
     }
 
     // FIX 3 helper: Only advance to dates that match the schedule's day
@@ -293,7 +308,9 @@ public class AppointmentService {
                 ? " | " + appointment.getNotes() : ""));
         appointment.setUpdatedAt(LocalDateTime.now());
 
-        return appointmentRepository.save(appointment);
+        Appointment rescheduled = appointmentRepository.save(appointment);
+        try { auditLogService.log("RESCHEDULE", "APPOINTMENT", rescheduled.getId(), "Rescheduled appointment from " + oldDate + " to " + newDate); } catch (Exception e) { /* audit log should never break main flow */ }
+        return rescheduled;
     }
 
 }

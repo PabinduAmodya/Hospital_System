@@ -31,8 +31,13 @@ public class PatientService {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     public Patient create(Patient patient) {
-        return patientRepository.save(patient);
+        Patient saved = patientRepository.save(patient);
+        try { auditLogService.log("CREATE", "PATIENT", saved.getId(), "Created patient: " + saved.getName()); } catch (Exception e) { /* audit log should never break main flow */ }
+        return saved;
     }
 
     public List<Patient> getAll() {
@@ -51,7 +56,9 @@ public class PatientService {
         existing.setEmail(updated.getEmail());
         existing.setGender(updated.getGender());
         existing.setDob(updated.getDob());
-        return patientRepository.save(existing);
+        Patient saved = patientRepository.save(existing);
+        try { auditLogService.log("UPDATE", "PATIENT", saved.getId(), "Updated patient: " + saved.getName()); } catch (Exception e) { /* audit log should never break main flow */ }
+        return saved;
     }
 
     public void delete(Long id) {
@@ -59,6 +66,7 @@ public class PatientService {
             throw new ResourceNotFoundException("Patient not found: " + id);
         }
         patientRepository.deleteById(id);
+        try { auditLogService.log("DELETE", "PATIENT", id, "Deleted patient with ID: " + id); } catch (Exception e) { /* audit log should never break main flow */ }
     }
 
 

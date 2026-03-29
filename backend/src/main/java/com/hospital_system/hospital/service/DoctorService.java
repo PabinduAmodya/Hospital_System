@@ -14,8 +14,13 @@ public class DoctorService {
     @Autowired
     private DoctorRepository doctorRepository;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     public Doctor create(Doctor doctor) {
-        return doctorRepository.save(doctor);
+        Doctor saved = doctorRepository.save(doctor);
+        try { auditLogService.log("CREATE", "DOCTOR", saved.getId(), "Created doctor: " + saved.getName()); } catch (Exception e) { /* audit log should never break main flow */ }
+        return saved;
     }
 
     public List<Doctor> getAll() {
@@ -34,7 +39,9 @@ public class DoctorService {
         existing.setPhone(updated.getPhone());
         existing.setEmail(updated.getEmail());
         existing.setChannelling_fee(updated.getChannelling_fee());
-        return doctorRepository.save(existing);
+        Doctor saved = doctorRepository.save(existing);
+        try { auditLogService.log("UPDATE", "DOCTOR", saved.getId(), "Updated doctor: " + saved.getName()); } catch (Exception e) { /* audit log should never break main flow */ }
+        return saved;
     }
 
     public void delete(Long id) {
@@ -42,6 +49,7 @@ public class DoctorService {
             throw new ResourceNotFoundException("Doctor not found: " + id);
         }
         doctorRepository.deleteById(id);
+        try { auditLogService.log("DELETE", "DOCTOR", id, "Deleted doctor with ID: " + id); } catch (Exception e) { /* audit log should never break main flow */ }
     }
 
     // Backward compatible methods used by older controllers
