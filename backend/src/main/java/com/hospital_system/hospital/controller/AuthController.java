@@ -6,6 +6,7 @@ import com.hospital_system.hospital.dto.RegisterRequest;
 import com.hospital_system.hospital.entity.User;
 import com.hospital_system.hospital.repository.UserRepository;
 import com.hospital_system.hospital.security.JwtUtil;
+import com.hospital_system.hospital.service.AuditLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,9 @@ public class AuthController {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
@@ -61,14 +65,23 @@ public class AuthController {
             User user = userRepository.findByUsername(loginRequest.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
+            // Audit log for successful login
+            try { auditLogService.log("LOGIN", "USER", user.getId(), "User logged in: " + user.getUsername(), user.getUsername(), user.getRole().name()); } catch (Exception ex) { /* audit log should never break main flow */ }
+
             // Return response with token
-            return ResponseEntity.ok(new AuthResponse(
+            AuthResponse authResponse = new AuthResponse(
                     jwt,
                     user.getUsername(),
                     user.getRole().name(),
                     "Login successful",
                     user.getName()
-            ));
+            );
+
+            if (user.getDoctor() != null) {
+                authResponse.setDoctorId(user.getDoctor().getId());
+            }
+
+            return ResponseEntity.ok(authResponse);
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

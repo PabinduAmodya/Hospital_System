@@ -57,4 +57,14 @@ public class AuthResponse {
     public void setName(String name) {
         this.name = name;
     }
+
+    private Long doctorId;
+
+    public Long getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(Long doctorId) {
+        this.doctorId = doctorId;
+    }
 }

@@ -1,5 +1,6 @@
 package com.hospital_system.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,13 +27,18 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private Role role;
 
     @Column(nullable = false)
     private boolean enabled = true;
 
     private String email; // used for password reset emails
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "doctor_id")
+    @JsonIgnoreProperties({"schedules"})
+    private Doctor doctor;
 
     // Constructors
     public User() {}
@@ -116,4 +122,7 @@ public class User implements UserDetails {
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public Doctor getDoctor() { return doctor; }
+    public void setDoctor(Doctor doctor) { this.doctor = doctor; }
 }
