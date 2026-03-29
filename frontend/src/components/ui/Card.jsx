@@ -1,16 +1,16 @@
-export default function Card({ title, subtitle, children, right }) {
+export default function Card({ title, subtitle, children, right, className = "", noPadding = false }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-5">
-      {(title || right) && (
-        <div className="flex items-start justify-between gap-4 mb-3">
+    <div className={`bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ${className}`}>
+      {(title || subtitle || right) && (
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
-            {title && <h3 className="text-sm font-semibold text-gray-800">{title}</h3>}
-            {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+            {title && <h3 className="text-sm font-semibold text-gray-900">{title}</h3>}
+            {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
           </div>
-          {right}
+          {right && <div>{right}</div>}
         </div>
       )}
-      {children}
+      <div className={noPadding ? "" : "p-5"}>{children}</div>
     </div>
   );
 }
