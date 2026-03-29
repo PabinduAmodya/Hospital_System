@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
@@ -54,4 +55,32 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // Today's appointments
     @Query("SELECT a FROM Appointment a WHERE a.appointmentDate = CURRENT_DATE")
     List<Appointment> findTodayAppointments();
+
+    // Count appointments by date range grouped by date
+    @Query("SELECT a.appointmentDate, COUNT(a) FROM Appointment a WHERE a.appointmentDate BETWEEN :startDate AND :endDate GROUP BY a.appointmentDate ORDER BY a.appointmentDate")
+    List<Object[]> countByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // Count appointments by date range and status
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate BETWEEN :startDate AND :endDate AND a.status = :status")
+    long countByDateRangeAndStatus(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, @Param("status") AppointmentStatus status);
+
+    // Count appointments by doctor
+    @Query("SELECT a.schedule.doctor.id, a.schedule.doctor.name, a.schedule.doctor.specialization, COUNT(a), " +
+            "SUM(CASE WHEN a.status = 'COMPLETED' THEN 1 ELSE 0 END), " +
+            "SUM(CASE WHEN a.status = 'CANCELLED' THEN 1 ELSE 0 END) " +
+            "FROM Appointment a GROUP BY a.schedule.doctor.id, a.schedule.doctor.name, a.schedule.doctor.specialization")
+    List<Object[]> getDoctorAppointmentStats();
+
+    // Count weekly appointments
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate BETWEEN :startDate AND :endDate")
+    long countByDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // Top doctors by appointment count
+    @Query("SELECT a.schedule.doctor.id, a.schedule.doctor.name, a.schedule.doctor.specialization, COUNT(a) as cnt " +
+            "FROM Appointment a GROUP BY a.schedule.doctor.id, a.schedule.doctor.name, a.schedule.doctor.specialization ORDER BY cnt DESC")
+    List<Object[]> findTopDoctorsByAppointmentCount();
+
+    // Find max token number for a given date (for daily token generation)
+    @Query("SELECT COALESCE(MAX(a.tokenNumber), 0) FROM Appointment a WHERE a.appointmentDate = :date")
+    Integer findMaxTokenNumberForDate(@Param("date") LocalDate date);
 }
