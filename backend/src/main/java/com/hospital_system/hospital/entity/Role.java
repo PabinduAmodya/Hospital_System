@@ -4,5 +4,6 @@ public enum Role {
     ADMIN,
     RECEPTIONIST,
     CASHIER,
-    DOCTOR
+    DOCTOR,
+    PATIENT
 }

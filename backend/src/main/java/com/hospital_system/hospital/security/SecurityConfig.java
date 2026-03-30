@@ -42,6 +42,7 @@ public class SecurityConfig {
 
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/patient-portal/register").permitAll()
 
                         // Protected endpoints
                         .requestMatchers("/api/**").authenticated()

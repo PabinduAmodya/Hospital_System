@@ -81,6 +81,10 @@ public class AuthController {
                 authResponse.setDoctorId(user.getDoctor().getId());
             }
 
+            if (user.getPatient() != null) {
+                authResponse.setPatientId(user.getPatient().getId());
+            }
+
             return ResponseEntity.ok(authResponse);
 
         } catch (BadCredentialsException e) {
