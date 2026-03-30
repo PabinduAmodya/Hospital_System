@@ -26,8 +26,13 @@ function Login() {
       if (res.data.doctorId) {
         localStorage.setItem("doctorId", res.data.doctorId);
       }
+      if (res.data.patientId) {
+        localStorage.setItem("patientId", res.data.patientId);
+      }
       if (res.data.role === "DOCTOR") {
         navigate("/doctor/dashboard");
+      } else if (res.data.role === "PATIENT") {
+        navigate("/patient/dashboard");
       } else {
         navigate("/dashboard");
       }

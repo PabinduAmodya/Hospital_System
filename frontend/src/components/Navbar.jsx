@@ -19,6 +19,12 @@ const titles = {
   "/doctor/consultations": "My Consultations",
   "/doctor/patients":      "My Patients",
   "/doctor/schedule":      "My Schedule",
+  "/patient/dashboard":    "Patient Dashboard",
+  "/patient/doctors":      "Find a Doctor",
+  "/patient/appointments": "My Appointments",
+  "/patient/records":      "Medical Records",
+  "/patient/bills":        "My Bills",
+  "/patient/profile":      "My Profile",
 };
 
 const subtitles = {
@@ -39,6 +45,11 @@ const subtitles = {
   "/doctor/consultations": "View all your consultations",
   "/doctor/patients":      "Patients you have treated",
   "/doctor/schedule":      "Your weekly availability",
+  "/patient/dashboard":    "Overview of your health journey",
+  "/patient/appointments": "View and manage your appointments",
+  "/patient/records":      "Your consultation history",
+  "/patient/bills":        "Your billing and payment history",
+  "/patient/profile":      "Manage your account",
 };
 
 function Navbar() {

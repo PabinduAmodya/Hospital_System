@@ -13,6 +13,8 @@ function ProtectedRoute({ children, allowedRoles }) {
   if (allowedRoles && !allowedRoles.includes(role)) {
     if (role === "DOCTOR") {
       return <Navigate to="/doctor/dashboard" replace />;
+    } else if (role === "PATIENT") {
+      return <Navigate to="/patient/dashboard" replace />;
     } else {
       return <Navigate to="/dashboard" replace />;
     }

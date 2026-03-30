@@ -23,6 +23,18 @@ import ConsultationsList from "./pages/doctor/ConsultationsList";
 import DoctorPatients from "./pages/doctor/DoctorPatients";
 import DoctorSchedule from "./pages/doctor/DoctorSchedule";
 
+import PatientLayout from "./layouts/PatientLayout";
+import Landing from "./pages/patient/Landing";
+import PatientLogin from "./pages/patient/PatientLogin";
+import PatientDashboard from "./pages/patient/PatientDashboard";
+import MyAppointments from "./pages/patient/MyAppointments";
+import MyRecords from "./pages/patient/MyRecords";
+import MyBills from "./pages/patient/MyBills";
+import PatientProfile from "./pages/patient/PatientProfile";
+import FindDoctors from "./pages/patient/FindDoctors";
+import BookAppointment from "./pages/patient/BookAppointment";
+import DoctorProfilePage from "./pages/patient/DoctorProfile";
+
 function App() {
   return (
     <Routes>
@@ -142,6 +154,26 @@ function App() {
           <DoctorSchedule />
         </ProtectedRoute>
       } />
+
+      {/* Patient Portal — Public */}
+      <Route path="/patient/landing" element={<Landing />} />
+      <Route path="/patient/login" element={<PatientLogin />} />
+
+      {/* Patient Portal — Protected (wrapped in PatientLayout) */}
+      <Route path="/patient" element={
+        <ProtectedRoute allowedRoles={["PATIENT"]}>
+          <PatientLayout />
+        </ProtectedRoute>
+      }>
+        <Route path="dashboard" element={<PatientDashboard />} />
+        <Route path="doctors" element={<FindDoctors />} />
+        <Route path="doctor/:id" element={<DoctorProfilePage />} />
+        <Route path="book/:doctorId" element={<BookAppointment />} />
+        <Route path="appointments" element={<MyAppointments />} />
+        <Route path="records" element={<MyRecords />} />
+        <Route path="bills" element={<MyBills />} />
+        <Route path="profile" element={<PatientProfile />} />
+      </Route>
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
