@@ -78,12 +78,20 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // ⭐ CORRECT CORS CONFIG
+    @org.springframework.beans.factory.annotation.Value("${app.frontend-url:http://localhost:5173}")
+    private String frontendUrl;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // FIXED
+        // Allow both localhost (dev) and production frontend URL
+        java.util.List<String> origins = new java.util.ArrayList<>();
+        origins.add("http://localhost:5173");
+        if (frontendUrl != null && !frontendUrl.isBlank() && !origins.contains(frontendUrl)) {
+            origins.add(frontendUrl);
+        }
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

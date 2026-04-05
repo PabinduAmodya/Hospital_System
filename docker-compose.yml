@@ -1,0 +1,29 @@
+# Docker Compose for local testing
+# Usage: docker-compose up --build
+
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - TIDB_PASSWORD=IF57HqZLsscztqvq
+      - GROQ_API_KEY=${GROQ_API_KEY:-your-groq-api-key}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/auth/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:8080/api
+    ports:
+      - "5173:8080"
+    depends_on:
+      - backend
